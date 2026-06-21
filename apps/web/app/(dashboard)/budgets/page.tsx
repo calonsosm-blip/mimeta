@@ -54,9 +54,9 @@ export default async function BudgetsPage({ searchParams }: Props) {
   }
 
   // Ordenar las filas del presupuesto según sort_order de la categoría
-  const budgets = (budgetRes.data ?? []).sort((a, b) => {
-    const ao = (a.categories as any)?.sort_order ?? 0
-    const bo = (b.categories as any)?.sort_order ?? 0
+  const budgets = ((budgetRes.data ?? []) as any[]).sort((a, b) => {
+    const ao = a.categories?.sort_order ?? 0
+    const bo = b.categories?.sort_order ?? 0
     return ao - bo
   })
 
