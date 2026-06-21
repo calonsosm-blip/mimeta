@@ -55,7 +55,7 @@ export default function LoginPage() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-muted px-4">
         <div className="w-full max-w-sm text-center space-y-5">
-          <Image src="/MiMeta-isotipo.png" alt="MiMeta" width={56} height={56} className="mx-auto object-contain" />
+          <Image src="/mimeta-isotipo.png" alt="MiMeta" width={56} height={56} className="mx-auto object-contain" />
           <div className="rounded-2xl border border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950/30 p-6">
             <p className="font-semibold text-emerald-800 dark:text-emerald-300">¡Revisa tu correo!</p>
             <p className="mt-1.5 text-sm text-emerald-700 dark:text-emerald-400">
@@ -78,7 +78,7 @@ export default function LoginPage() {
       {/* Panel izquierdo — branding */}
       <div className="hidden lg:flex lg:w-[45%] flex-col justify-between bg-foreground p-12">
         <div className="flex items-center gap-3">
-          <Image src="/MiMeta-isotipo.png" alt="MiMeta" width={36} height={36} className="object-contain" />
+          <Image src="/mimeta-isotipo.png" alt="MiMeta" width={36} height={36} className="object-contain" />
           <div>
             <p className="text-sm font-bold text-background leading-tight">MiMeta</p>
             <p className="text-xs text-background/50 leading-tight">tu dinero, tus metas</p>
@@ -109,7 +109,7 @@ export default function LoginPage() {
 
           {/* Logo mobile */}
           <div className="flex lg:hidden items-center gap-3 justify-center">
-            <Image src="/MiMeta-isotipo.png" alt="MiMeta" width={36} height={36} className="object-contain" />
+            <Image src="/mimeta-isotipo.png" alt="MiMeta" width={36} height={36} className="object-contain" />
             <div>
               <p className="text-sm font-bold text-foreground leading-tight">MiMeta</p>
               <p className="text-xs text-muted-foreground leading-tight">tu dinero, tus metas</p>
