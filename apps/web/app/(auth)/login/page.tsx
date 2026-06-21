@@ -37,6 +37,12 @@ export default function LoginPage() {
       else setSent(true)
 
     } else if (mode === 'register') {
+      const { count } = await supabase.from('profiles').select('*', { count: 'exact', head: true })
+      if ((count ?? 0) >= 20) {
+        setError('La beta está completa (20/20 usuarios). Escríbenos a mimeta@gmail.com para unirte a la lista de espera.')
+        setLoading(false)
+        return
+      }
       const { error } = await supabase.auth.signUp({
         email,
         password,
