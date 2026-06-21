@@ -47,7 +47,7 @@ export default async function BudgetsPage({ searchParams }: Props) {
   ])
 
   const actualByCategory: Record<string, number> = {}
-  for (const tx of actualRes.data ?? []) {
+  for (const tx of (actualRes.data ?? []) as { category_id: string | null; amount_pen: number }[]) {
     if (tx.category_id) {
       actualByCategory[tx.category_id] = (actualByCategory[tx.category_id] ?? 0) + tx.amount_pen
     }
