@@ -116,7 +116,7 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex bg-muted">
+    <div className="min-h-screen flex flex-col lg:flex-row bg-muted">
       {/* Panel izquierdo — branding */}
       <div className="hidden lg:flex lg:w-[45%] flex-col justify-between bg-foreground p-12">
         <div className="flex items-center gap-3">
@@ -153,8 +153,8 @@ export default function LoginPage() {
       </div>
 
       {/* Panel derecho — formulario */}
-      <div className="flex flex-1 items-center justify-center px-4 py-12">
-        <div className="w-full max-w-sm space-y-7">
+      <div className="flex flex-1 items-center justify-center px-4 py-8 md:py-12">
+        <div className="w-full max-w-sm space-y-6 md:space-y-7">
 
           {/* Logo mobile */}
           <div className="flex lg:hidden items-center gap-3 justify-center">

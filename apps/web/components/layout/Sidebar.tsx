@@ -43,7 +43,12 @@ const NAV_GROUPS = [
   },
 ]
 
-interface SidebarProps { user: User; profile: Profile | null }
+interface SidebarProps {
+  user: User
+  profile: Profile | null
+  isOpen?: boolean
+  onClose?: () => void
+}
 
 function UserAvatar({ name }: { name: string }) {
   const initials = name.split(' ').filter(Boolean).map(w => w[0]).slice(0, 2).join('').toUpperCase()
@@ -54,7 +59,7 @@ function UserAvatar({ name }: { name: string }) {
   )
 }
 
-export function Sidebar({ user, profile }: SidebarProps) {
+export function Sidebar({ user, profile, isOpen = false, onClose }: SidebarProps) {
   const pathname  = usePathname()
   const router    = useRouter()
   const { theme, setTheme } = useTheme()
@@ -84,7 +89,12 @@ export function Sidebar({ user, profile }: SidebarProps) {
   }
 
   return (
-    <aside className="flex w-60 shrink-0 flex-col border-r border-sidebar-border bg-sidebar">
+    <aside className={`
+      fixed inset-y-0 left-0 z-50 flex w-64 shrink-0 flex-col border-r border-sidebar-border bg-sidebar
+      transform transition-transform duration-200 ease-in-out
+      lg:static lg:translate-x-0 lg:z-auto
+      ${isOpen ? 'translate-x-0' : '-translate-x-full'}
+    `}>
 
       {/* Logo */}
       <div className="flex h-16 items-center justify-between px-4 border-b border-sidebar-border">
