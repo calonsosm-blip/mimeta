@@ -1,12 +1,12 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid,
   Tooltip, Legend, ResponsiveContainer,
 } from 'recharts'
-import { Download, SlidersHorizontal, X } from 'lucide-react'
+import { ChevronDown, FileSpreadsheet, FileText, SlidersHorizontal, X } from 'lucide-react'
 
 interface Transaction {
   id: string
@@ -59,6 +59,17 @@ export function MonthlyReportClient({ transactions, mode, year, month, from, to,
   const [draftMonth,  setDraftMonth]  = useState(month)
   const [draftFrom,   setDraftFrom]   = useState(from)
   const [draftTo,     setDraftTo]     = useState(to)
+
+  // Export dropdown
+  const [exportOpen, setExportOpen] = useState(false)
+  const exportRef = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    function handler(e: MouseEvent) {
+      if (exportRef.current && !exportRef.current.contains(e.target as Node)) setExportOpen(false)
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [])
 
   function applyConfig() {
     if (draftMode === 'annual') {
@@ -130,28 +141,129 @@ export function MonthlyReportClient({ transactions, mode, year, month, from, to,
   const totalCatSpend = byCategory.reduce((s, c) => s + c.total, 0)
   const years         = Array.from({ length: 5 }, (_, i) => currentYear - i)
 
-  function exportCSV() {
-    const headers = ['Fecha','Tipo','Concepto','Categoría','Moneda','Monto','Monto PEN','Notas']
-    const rows = [...transactions]
-      .sort((a, b) => a.date.localeCompare(b.date))
-      .map(tx => [
+  const sortedTx = [...transactions].sort((a, b) => a.date.localeCompare(b.date))
+  const fileName  = `mimeta-reporte-${mode}-${year}`
+
+  async function exportExcel() {
+    setExportOpen(false)
+    const XLSX = await import('xlsx')
+    const wb   = XLSX.utils.book_new()
+
+    // Hoja 1: Resumen
+    const ws1 = XLSX.utils.aoa_to_sheet([
+      ['MiMeta — Reporte'],
+      ['Período', reportTitle(mode, year, month, from, to)],
+      [],
+      ['Ingresos (S/)', totalIncome],
+      ['Egresos (S/)',  totalExpenses],
+      ['Balance (S/)',  totalBalance],
+    ])
+    XLSX.utils.book_append_sheet(wb, ws1, 'Resumen')
+
+    // Hoja 2: Transacciones
+    const ws2 = XLSX.utils.aoa_to_sheet([
+      ['Fecha','Tipo','Concepto','Categoría','Moneda','Monto','Monto PEN','Notas'],
+      ...sortedTx.map(tx => [
         tx.date,
         tx.type === 'income' ? 'Ingreso' : 'Egreso',
-        `"${tx.concept.replace(/"/g, '""')}"`,
+        tx.concept,
         tx.categories?.name ?? 'Sin categoría',
         tx.currency,
-        tx.amount.toFixed(2),
-        tx.amount_pen.toFixed(2),
-        tx.notes ? `"${tx.notes.replace(/"/g, '""')}"` : '',
+        tx.amount,
+        tx.amount_pen,
+        tx.notes ?? '',
+      ]),
+    ])
+    XLSX.utils.book_append_sheet(wb, ws2, 'Transacciones')
+
+    // Hoja 3: Por categoría
+    if (byCategory.length > 0) {
+      const ws3 = XLSX.utils.aoa_to_sheet([
+        ['Categoría','Total (S/)','%'],
+        ...byCategory.map(c => [
+          c.name,
+          c.total,
+          totalCatSpend > 0 ? +((c.total / totalCatSpend) * 100).toFixed(1) : 0,
+        ]),
       ])
-    const csv  = [headers.join(','), ...rows.map(r => r.join(','))].join('\n')
-    const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' })
-    const url  = URL.createObjectURL(blob)
-    const a    = document.createElement('a')
-    a.href = url
-    a.download = `mimeta-reporte-${mode}-${year}.csv`
-    a.click()
-    URL.revokeObjectURL(url)
+      XLSX.utils.book_append_sheet(wb, ws3, 'Por categoría')
+    }
+
+    XLSX.writeFile(wb, `${fileName}.xlsx`)
+  }
+
+  async function exportPDF() {
+    setExportOpen(false)
+    const { default: jsPDF } = await import('jspdf')
+    const { default: autoTable } = await import('jspdf-autotable')
+    const doc    = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
+    const brand: [number, number, number] = [14, 124, 74]
+    const title  = reportTitle(mode, year, month, from, to)
+
+    // Encabezado
+    doc.setFontSize(20)
+    doc.setTextColor(brand[0], brand[1], brand[2])
+    doc.text('MiMeta', 14, 18)
+    doc.setFontSize(11)
+    doc.setTextColor(60, 60, 60)
+    doc.text(`Reporte — ${title}`, 14, 26)
+
+    // Resumen
+    doc.setFontSize(8)
+    doc.setTextColor(120, 120, 120)
+    doc.text('Ingresos', 14, 37)
+    doc.text('Egresos',  80, 37)
+    doc.text('Balance', 146, 37)
+    doc.setFontSize(12)
+    doc.setTextColor(16, 185, 129)
+    doc.text(`S/ ${fmt(totalIncome)}`, 14, 44)
+    doc.setTextColor(100, 116, 139)
+    doc.text(`S/ ${fmt(totalExpenses)}`, 80, 44)
+    doc.setTextColor(totalBalance >= 0 ? 16 : 239, totalBalance >= 0 ? 185 : 68, totalBalance >= 0 ? 129 : 68)
+    doc.text(`S/ ${fmt(totalBalance)}`, 146, 44)
+
+    // Tabla de transacciones
+    autoTable(doc, {
+      startY: 52,
+      head: [['Fecha','Tipo','Concepto','Categoría','Monto (S/)']],
+      body: sortedTx.map(tx => [
+        tx.date,
+        tx.type === 'income' ? 'Ingreso' : 'Egreso',
+        tx.concept,
+        tx.categories?.name ?? 'Sin cat.',
+        fmt(tx.amount_pen),
+      ]),
+      styles:            { fontSize: 8, cellPadding: 2 },
+      headStyles:        { fillColor: brand, fontSize: 8, fontStyle: 'bold' },
+      columnStyles:      { 4: { halign: 'right' } },
+      alternateRowStyles:{ fillColor: [248, 250, 252] },
+    })
+
+    // Tabla de categorías
+    if (byCategory.length > 0) {
+      const lastY      = (doc as any).lastAutoTable?.finalY ?? 52
+      const pageH      = doc.internal.pageSize.height
+      const catStartY  = lastY + 12 > pageH - 60 ? (doc.addPage(), 14) : lastY + 12
+
+      doc.setFontSize(11)
+      doc.setTextColor(60, 60, 60)
+      doc.text('Egresos por categoría', 14, catStartY)
+
+      autoTable(doc, {
+        startY: catStartY + 6,
+        head: [['Categoría','Total (S/)','%']],
+        body: byCategory.map(c => [
+          c.name,
+          fmt(c.total),
+          totalCatSpend > 0 ? ((c.total / totalCatSpend) * 100).toFixed(1) + '%' : '0%',
+        ]),
+        styles:      { fontSize: 9 },
+        headStyles:  { fillColor: brand },
+        columnStyles:{ 1: { halign: 'right' }, 2: { halign: 'right' } },
+      })
+    }
+
+    doc.save(`${fileName}.pdf`)
   }
 
   const inputClass   = 'rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring w-full'
@@ -169,14 +281,36 @@ export function MonthlyReportClient({ transactions, mode, year, month, from, to,
           <p className="text-sm text-muted-foreground mt-0.5">{reportTitle(mode, year, month, from, to)}</p>
         </div>
         <div className="flex items-center gap-2 shrink-0">
-          <button
-            onClick={exportCSV}
-            disabled={transactions.length === 0}
-            className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-40 transition-colors"
-          >
-            <Download className="h-4 w-4" />
-            <span className="hidden sm:inline">Exportar CSV</span>
-          </button>
+          {/* Dropdown exportar */}
+          <div className="relative" ref={exportRef}>
+            <button
+              onClick={() => setExportOpen(v => !v)}
+              disabled={transactions.length === 0}
+              className="flex items-center gap-1.5 rounded-lg bg-primary px-3 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-40 transition-colors"
+            >
+              <span className="hidden sm:inline">Exportar</span>
+              <ChevronDown className="h-3.5 w-3.5" />
+            </button>
+            {exportOpen && (
+              <div className="absolute right-0 top-full mt-1 z-20 w-44 rounded-xl border border-border bg-card shadow-lg overflow-hidden">
+                <button
+                  onClick={exportExcel}
+                  className="flex w-full items-center gap-3 px-4 py-2.5 text-sm text-foreground hover:bg-muted transition-colors"
+                >
+                  <FileSpreadsheet className="h-4 w-4 text-emerald-500 shrink-0" />
+                  Excel (.xlsx)
+                </button>
+                <button
+                  onClick={exportPDF}
+                  className="flex w-full items-center gap-3 px-4 py-2.5 text-sm text-foreground hover:bg-muted transition-colors border-t border-border"
+                >
+                  <FileText className="h-4 w-4 text-red-500 shrink-0" />
+                  PDF (.pdf)
+                </button>
+              </div>
+            )}
+          </div>
+
           <button
             onClick={() => setConfigOpen(true)}
             className="flex items-center justify-center h-9 w-9 rounded-lg border border-border bg-card text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
