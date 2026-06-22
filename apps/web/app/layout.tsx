@@ -6,11 +6,11 @@ import { ThemeProvider } from '@/components/providers/ThemeProvider'
 const manrope = Manrope({ subsets: ['latin'], variable: '--font-sans' })
 
 export const metadata: Metadata = {
-  title: 'MiMeta — Tu dinero, tus metas',
+  title: 'MiMeta — Tus metas, más cerca cada día.',
   description: 'Controla tus finanzas, ahorra con inteligencia y cumple tus metas.',
   metadataBase: new URL('https://mimeta-web.vercel.app'),
   openGraph: {
-    title: 'MiMeta — Tu dinero, tus metas',
+    title: 'MiMeta — Tus metas, más cerca cada día.',
     description: 'Controla tus finanzas, ahorra con inteligencia y cumple tus metas.',
     url: 'https://mimeta-web.vercel.app',
     siteName: 'MiMeta',
@@ -19,7 +19,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'MiMeta — Tu dinero, tus metas',
+    title: 'MiMeta — Tus metas, más cerca cada día.',
     description: 'Controla tus finanzas, ahorra con inteligencia y cumple tus metas.',
   },
 }

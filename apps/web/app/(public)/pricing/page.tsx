@@ -93,7 +93,7 @@ export default function PricingPage() {
             <Image src="/mimeta-isotipo.png" alt="MiMeta" width={32} height={32} className="object-contain shrink-0" />
             <div>
               <p className="text-sm font-bold text-foreground leading-tight">MiMeta</p>
-              <p className="text-[11px] text-muted-foreground leading-tight">tu dinero, tus metas</p>
+              <p className="text-[11px] text-muted-foreground leading-tight">Tus metas, más cerca cada día.</p>
             </div>
           </Link>
           <Link
