@@ -9,6 +9,7 @@ import { useIsMobile } from '@/hooks/useIsMobile'
 
 interface Props {
   profile: { display_name: string | null; plan: string } | null
+  baseCurrency: 'PEN' | 'USD'
   balance: { income: number; expenses: number; balance: number }
   recentTransactions: {
     id: string
@@ -37,10 +38,12 @@ function fmt(amount: number) {
 }
 
 export function DashboardClient({
-  profile, balance, recentTransactions, upcomingReminders,
+  profile, baseCurrency, balance, recentTransactions, upcomingReminders,
   totalBudget, today, daysInMonth,
   selectedYear, selectedMonth, isCurrentMonth, expenseByCategory, cumulativeBalance,
 }: Props) {
+  // Los totales vienen de amount_pen (siempre en PEN), símbolo refleja eso
+  const sym = 'S/'
   const [invisible, setInvisible] = useState(false)
   const router = useRouter()
   const isMobile = useIsMobile()
@@ -170,13 +173,13 @@ export function DashboardClient({
         <div className="rounded-xl border border-border bg-card p-3 sm:p-6 shadow-sm">
           <p className="text-xs sm:text-sm font-medium text-muted-foreground">Ingresos</p>
           <p className="mt-1 sm:mt-2 text-base sm:text-2xl font-bold text-emerald-500 dark:text-emerald-400 truncate">
-            S/ {mask(fmt(balance.income))}
+            {sym} {mask(fmt(balance.income))}
           </p>
         </div>
         <div className="rounded-xl border border-border bg-card p-3 sm:p-6 shadow-sm">
           <p className="text-xs sm:text-sm font-medium text-muted-foreground">Egresos</p>
           <p className="mt-1 sm:mt-2 text-base sm:text-2xl font-bold text-slate-500 dark:text-slate-400 truncate">
-            S/ {mask(fmt(balance.expenses))}
+            {sym} {mask(fmt(balance.expenses))}
           </p>
         </div>
         <div className={`rounded-xl border p-3 sm:p-6 shadow-sm ${
@@ -188,14 +191,14 @@ export function DashboardClient({
           <p className={`mt-1 sm:mt-2 text-base sm:text-2xl font-bold truncate ${
             balance.balance >= 0 ? 'text-accent-foreground' : 'text-red-600 dark:text-red-400'
           }`}>
-            S/ {mask(fmt(balance.balance))}
+            {sym} {mask(fmt(balance.balance))}
           </p>
           <p className="mt-1 hidden sm:block text-xs text-muted-foreground">
             Acumulado:{' '}
             <span className={`font-medium ${
               cumulativeBalance >= 0 ? 'text-primary' : 'text-red-500 dark:text-red-400'
             }`}>
-              {invisible ? '••••' : `S/ ${fmt(cumulativeBalance)}`}
+              {invisible ? '••••' : `${sym} ${fmt(cumulativeBalance)}`}
             </span>
           </p>
         </div>
@@ -204,7 +207,7 @@ export function DashboardClient({
       <p className="sm:hidden text-xs text-muted-foreground -mt-2">
         Acumulado:{' '}
         <span className={`font-medium ${cumulativeBalance >= 0 ? 'text-primary' : 'text-red-500 dark:text-red-400'}`}>
-          {invisible ? '••••' : `S/ ${fmt(cumulativeBalance)}`}
+          {invisible ? '••••' : `${sym} ${fmt(cumulativeBalance)}`}
         </span>
       </p>
 
@@ -298,7 +301,7 @@ export function DashboardClient({
                       ? 'text-emerald-600 dark:text-emerald-400'
                       : 'text-slate-500 dark:text-slate-400'
                   }`}>
-                    {tx.type === 'income' ? '+' : '-'} S/ {mask(fmt(tx.amount_pen))}
+                    {tx.type === 'income' ? '+' : '-'} {sym} {mask(fmt(tx.amount_pen))}
                   </span>
                 </li>
               ))}

@@ -35,6 +35,28 @@ function fmt(n: number) {
   return new Intl.NumberFormat('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n)
 }
 
+function displayAmount(tx: Transaction, baseCurrency: 'PEN' | 'USD') {
+  if (tx.currency === baseCurrency) {
+    // Moneda de la transacción = moneda base → mostrar amount directo
+    return {
+      primary: `${baseCurrency === 'PEN' ? 'S/' : '$'} ${fmt(tx.amount)}`,
+      secondary: null,
+    }
+  }
+  if (baseCurrency === 'PEN') {
+    // Base PEN, transacción en USD → mostrar equivalente en PEN con nota original
+    return {
+      primary: `S/ ${fmt(tx.amount_pen)}`,
+      secondary: `$ ${fmt(tx.amount)}`,
+    }
+  }
+  // Base USD, transacción en PEN → mostrar en PEN (no hay TC histórico para convertir)
+  return {
+    primary: `S/ ${fmt(tx.amount_pen)}`,
+    secondary: 'PEN',
+  }
+}
+
 const MONTHS = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic']
 
 export function TransactionsClient({ transactions, categories, userId, baseCurrency }: Props) {
@@ -186,10 +208,17 @@ export function TransactionsClient({ transactions, categories, userId, baseCurre
                     <td className={`px-2 py-3 sm:px-4 text-right font-semibold text-xs sm:text-sm whitespace-nowrap ${
                       tx.type === 'income' ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-500 dark:text-slate-400'
                     }`}>
-                      {tx.type === 'income' ? '+' : '-'} S/ {fmt(tx.amount_pen)}
-                      {tx.currency === 'USD' && (
-                        <span className="ml-1 text-xs text-muted-foreground">(${fmt(tx.amount)})</span>
-                      )}
+                      {(() => {
+                        const { primary, secondary } = displayAmount(tx, baseCurrency)
+                        return (
+                          <>
+                            {tx.type === 'income' ? '+' : '-'} {primary}
+                            {secondary && (
+                              <span className="ml-1 text-xs font-normal text-muted-foreground">({secondary})</span>
+                            )}
+                          </>
+                        )
+                      })()}
                     </td>
                     <td className="px-2 py-3 sm:px-4">
                       <div className="flex items-center gap-1">

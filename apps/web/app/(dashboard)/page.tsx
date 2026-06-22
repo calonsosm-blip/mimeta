@@ -25,7 +25,7 @@ export default async function DashboardPage({ searchParams }: Props) {
     profileRes, balanceRes, recentRes, upcomingRes,
     budgetTotalRes, expensesRes, cumulativeRes,
   ] = await Promise.all([
-    supabase.from('profiles').select('display_name, plan').eq('id', user!.id).single(),
+    supabase.from('profiles').select('display_name, plan, base_currency').eq('id', user!.id).single(),
     supabase.rpc('get_monthly_balance', { p_user_id: user!.id, p_year: year, p_month: month }),
     supabase
       .from('transactions')
@@ -84,6 +84,7 @@ export default async function DashboardPage({ searchParams }: Props) {
   return (
     <DashboardClient
       profile={profileRes.data}
+      baseCurrency={(profileRes.data?.base_currency as 'PEN' | 'USD') ?? 'PEN'}
       balance={balance}
       recentTransactions={(recentRes.data ?? []) as any}
       upcomingReminders={upcomingRes.data ?? []}
