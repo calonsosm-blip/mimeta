@@ -24,14 +24,25 @@ export default function LoginPage() {
   const [progress, setProgress]             = useState(0)
   const supabase = createClient()
 
-  // Forzar modo claro + acento MiMeta en la página de login
+  // Forzar modo claro + acento MiMeta en la página de login.
+  // MutationObserver revierte cualquier intento de ThemeProvider de re-agregar 'dark'.
   useEffect(() => {
     const html = document.documentElement
     const prevAccent = html.getAttribute('data-accent') ?? 'mimeta'
     const wasDark = html.classList.contains('dark')
-    html.classList.remove('dark')
-    html.setAttribute('data-accent', 'mimeta')
+
+    const enforce = () => {
+      if (html.classList.contains('dark')) html.classList.remove('dark')
+      if (html.getAttribute('data-accent') !== 'mimeta') html.setAttribute('data-accent', 'mimeta')
+    }
+
+    enforce()
+
+    const observer = new MutationObserver(enforce)
+    observer.observe(html, { attributes: true, attributeFilter: ['class', 'data-accent'] })
+
     return () => {
+      observer.disconnect()
       if (wasDark) html.classList.add('dark')
       html.setAttribute('data-accent', prevAccent)
     }
