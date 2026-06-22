@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { Pencil, Trash2, CheckCircle2, Zap, SlidersHorizontal, RotateCcw, HelpCircle } from 'lucide-react'
+import { useCurrency } from '@/hooks/useCurrency'
 
 /* ─── Tipos ─────────────────────────────────────────────── */
 interface Snapshot {
@@ -15,6 +16,7 @@ interface Goal {
 interface Props {
   snapshots: Snapshot[]; goals: Goal[]; userId: string
   accumulatedBalance: number; monthlyBalance: number; currentMonthLabel: string
+  baseCurrency: 'PEN' | 'USD'
 }
 
 /* ─── Constantes ─────────────────────────────────────────── */
@@ -24,19 +26,18 @@ const EMOJIS      = ['🎯','💰','🏠','🚗','🌍','📚','✈️','💍','
 const GOAL_COLORS = ['#fb923c','#34d399','#60a5fa','#a78bfa','#fbbf24','#f472b6','#22d3ee','#4ade80','#f87171','#c084fc']
 const EMPTY_GOAL  = { name:'', target_amount:'', current_amount:'0', target_date:'', emoji:'🎯', notes:'' }
 
-function fmt(n: number) {
-  return new Intl.NumberFormat('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n)
-}
-function fmtShort(n: number) {
-  return n >= 1000 ? `S/ ${(n / 1000).toFixed(1)}k` : `S/ ${Math.round(n)}`
-}
 
 /* ─── Componente ─────────────────────────────────────────── */
 export function SavingsClient({
   snapshots: initial, goals: initialGoals, userId,
-  accumulatedBalance, monthlyBalance, currentMonthLabel,
+  accumulatedBalance, monthlyBalance, currentMonthLabel, baseCurrency,
 }: Props) {
   const supabase = createClient()
+  const { sym, fromPen, fmt } = useCurrency(baseCurrency)
+  const fmtShort = (n: number) => {
+    const v = fromPen(n)
+    return v >= 1000 ? `${sym} ${(v / 1000).toFixed(1)}k` : `${sym} ${Math.round(v)}`
+  }
 
   /* ── Modo ── */
   const [mode, setMode] = useState<'manual' | 'auto'>(() => {
@@ -193,12 +194,12 @@ export function SavingsClient({
     const target = Number(g.target_amount)
     if (isNaN(val) || val < 0) return
     if (val > target) {
-      setUpdateError(`Máximo permitido: S/ ${fmt(target)} (monto objetivo)`)
+      setUpdateError(`Máximo permitido: ${sym} ${fmt(fromPen(target))} (monto objetivo)`)
       return
     }
     const otherAllocated = goals.filter(x => x.id !== g.id).reduce((s, x) => s + Number(x.current_amount), 0)
     if (otherAllocated + val > poolBalance) {
-      setUpdateError(`Máximo disponible: S/ ${fmt(Math.max(poolBalance - otherAllocated, 0))}`)
+      setUpdateError(`Máximo disponible: ${sym} ${fmt(fromPen(Math.max(poolBalance - otherAllocated, 0)))}`)
       return
     }
     setUpdateError('')
@@ -318,16 +319,16 @@ export function SavingsClient({
           </div>
           <div className="mt-1.5 text-[11px] text-muted-foreground space-y-0.5">
             <div className="flex justify-between">
-              <span>Distribuido: S/ {fmt(totalAllocated)}</span>
+              <span>Distribuido: {sym} {fmt(fromPen(totalAllocated))}</span>
               <span className="font-bold text-primary">{poolPct}%</span>
             </div>
-            <span>Disponible: S/ {fmt(poolAvailable)}</span>
+            <span>Disponible: {sym} {fmt(fromPen(poolAvailable))}</span>
           </div>
           {poolAvailable > 0 && (
             <div className="mt-3 flex items-center gap-2 rounded-xl bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700/40 px-3 py-2">
               <span className="text-amber-500 text-sm leading-none">⚡</span>
               <p className="text-[11px] text-amber-700 dark:text-amber-400 font-medium flex-1">
-                <span className="font-bold">S/ {fmt(poolAvailable)}</span> sin asignar a ninguna meta.
+                <span className="font-bold">{sym} {fmt(fromPen(poolAvailable))}</span> sin asignar a ninguna meta.
               </p>
               <div className="relative group shrink-0">
                 <HelpCircle className="h-3.5 w-3.5 text-amber-500 cursor-pointer" />
@@ -348,10 +349,10 @@ export function SavingsClient({
           </div>
           <div className="mt-1.5 text-[11px] text-muted-foreground space-y-0.5">
             <div className="flex justify-between">
-              <span>Ahorrado: S/ {fmt(totalSaved)}</span>
+              <span>Ahorrado: {sym} {fmt(fromPen(totalSaved))}</span>
               <span className="font-bold text-primary">{totalPct}%</span>
             </div>
-            <span>Objetivo: S/ {fmt(totalTarget)}</span>
+            <span>Objetivo: {sym} {fmt(fromPen(totalTarget))}</span>
           </div>
         </div>
       </div>
@@ -380,14 +381,14 @@ export function SavingsClient({
                   </select>
                 </div>
                 <div className="text-[11px] text-muted-foreground space-y-0.5">
-                  <p>Balance neto del mes: <span className="font-semibold text-foreground">{selBalLoading ? '...' : `S/ ${fmt(selBalance)}`}</span></p>
+                  <p>Balance neto del mes: <span className="font-semibold text-foreground">{selBalLoading ? '...' : `${sym} ${fmt(fromPen(selBalance))}`}</span></p>
                   {appliedThisMonth > 0 && (
-                    <p>Ya aportado: <span className="font-semibold text-amber-600 dark:text-amber-400">− S/ {fmt(appliedThisMonth)}</span></p>
+                    <p>Ya aportado: <span className="font-semibold text-amber-600 dark:text-amber-400">− {sym} {fmt(fromPen(appliedThisMonth))}</span></p>
                   )}
                   <p>
                     Disponible:{' '}
                     <span className={`font-semibold ${monthlyAvailable === 0 ? 'text-muted-foreground' : 'text-emerald-600 dark:text-emerald-400'}`}>
-                      S/ {fmt(monthlyAvailable)}
+                      {sym} {fmt(fromPen(monthlyAvailable))}
                     </span>
                   </p>
                 </div>
@@ -396,7 +397,7 @@ export function SavingsClient({
             <div className="text-right shrink-0">
               <p className="text-[10px] text-muted-foreground">A aportar ahora</p>
               <p className={`text-sm font-extrabold ${pctExceeds100 || autoExceedsPool ? 'text-red-500' : 'text-primary'}`}>
-                S/ {fmt(effectiveContribution)}
+                {sym} {fmt(fromPen(effectiveContribution))}
               </p>
             </div>
           </div>
@@ -432,7 +433,7 @@ export function SavingsClient({
               />
             </div>
             <p className="text-[10px] text-muted-foreground">
-              % sobre el monto disponible del mes (S/ {fmt(monthlyAvailable)})
+              % sobre el monto disponible del mes ({sym} {fmt(fromPen(monthlyAvailable))})
             </p>
           </div>
 
@@ -444,12 +445,12 @@ export function SavingsClient({
           )}
           {autoExceedsPool && !pctExceeds100 && (
             <p className="text-[11px] text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900 rounded-lg px-3 py-2">
-              ⚠️ El aporte total (S/ {fmt(effectiveContribution)}) supera el balance disponible (S/ {fmt(poolAvailable)}).
+              ⚠️ El aporte total ({sym} {fmt(fromPen(effectiveContribution))}) supera el balance disponible ({sym} {fmt(fromPen(poolAvailable))}).
             </p>
           )}
           {monthlyAvailable === 0 && selBalance > 0 && (
             <p className="text-[11px] text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900 rounded-lg px-3 py-2">
-              Has aportado todo el balance disponible del mes (S/ {fmt(selBalance)}).
+              Has aportado todo el balance disponible del mes ({sym} {fmt(fromPen(selBalance))}).
             </p>
           )}
           {selBalance === 0 && !selBalLoading && (
@@ -551,9 +552,9 @@ export function SavingsClient({
                 <div className="flex justify-between items-baseline mb-2">
                   <div>
                     <div className="text-[17px] font-extrabold leading-none" style={{ color }}>
-                      S/ {fmt(current)}
+                      {sym} {fmt(fromPen(current))}
                     </div>
-                    <div className="text-[10px] text-muted-foreground mt-0.5">de S/ {fmt(target)}</div>
+                    <div className="text-[10px] text-muted-foreground mt-0.5">de {sym} {fmt(fromPen(target))}</div>
                   </div>
                   <div className="text-right">
                     <div className="text-xl font-extrabold text-foreground/30">{pct}%</div>
@@ -580,7 +581,7 @@ export function SavingsClient({
                   isUp ? (
                     <div className="mt-2 space-y-1">
                       <div className="text-[10px] text-muted-foreground">
-                        Disponible: S/ {fmt(Math.max(poolBalance - goals.filter(x => x.id !== g.id).reduce((s, x) => s + Number(x.current_amount), 0), 0))}
+                        Disponible: {sym} {fmt(fromPen(Math.max(poolBalance - goals.filter(x => x.id !== g.id).reduce((s, x) => s + Number(x.current_amount), 0), 0)))}
                       </div>
                       <div className="flex gap-1.5 items-center">
                         <input
@@ -604,7 +605,7 @@ export function SavingsClient({
                       onClick={() => { setUpdatingId(g.id); setUpdateAmount(current.toString()); setUpdateError('') }}
                       className="mt-1.5 text-[10px] text-muted-foreground hover:text-primary transition-colors text-left"
                     >
-                      {remain > 0 ? `Falta: S/ ${fmt(remain)}` : '¡Meta alcanzada!'} — <span className="underline underline-offset-2">actualizar</span>
+                      {remain > 0 ? `Falta: ${sym} ${fmt(fromPen(remain))}` : '¡Meta alcanzada!'} — <span className="underline underline-offset-2">actualizar</span>
                     </button>
                   )
                 ) : (
@@ -622,12 +623,12 @@ export function SavingsClient({
                       </div>
                       <span className="text-[10px] text-muted-foreground shrink-0">=</span>
                       <span className="text-xs font-bold shrink-0" style={{ color }}>
-                        +S/ {fmt(autoPrev?.add ?? 0)}
+                        +{sym} {fmt(fromPen(autoPrev?.add ?? 0))}
                       </span>
                     </div>
                     {autoPrev && autoPrev.add > 0 && (
                       <div className="text-[10px] text-muted-foreground">
-                        Nuevo total: <span className="font-semibold text-foreground">S/ {fmt(autoPrev.newAmount)}</span>
+                        Nuevo total: <span className="font-semibold text-foreground">{sym} {fmt(fromPen(autoPrev.newAmount))}</span>
                         <span className="ml-1">({previewPct}%)</span>
                       </div>
                     )}
@@ -661,7 +662,7 @@ export function SavingsClient({
                   <div className="w-9 h-9 bg-emerald-100 dark:bg-emerald-900/30 rounded-xl flex items-center justify-center text-lg flex-none">{g.emoji}</div>
                   <div className="flex-1 min-w-0">
                     <p className="text-xs font-bold text-foreground truncate">{g.name}</p>
-                    <p className="text-[10px]" style={{ color }}>S/ {fmt(Number(g.target_amount))} · 100%</p>
+                    <p className="text-[10px]" style={{ color }}>{sym} {fmt(fromPen(Number(g.target_amount)))} · 100%</p>
                   </div>
                   <button onClick={() => toggleCompleted(g)} className="text-[10px] text-muted-foreground hover:text-primary shrink-0">Reabrir</button>
                 </div>
@@ -751,7 +752,7 @@ export function SavingsClient({
             <p className="text-xs text-muted-foreground mb-5 leading-relaxed">
               Se revertirán los aportes automáticos realizados en{' '}
               <span className="font-semibold text-foreground">{monthOptions.find(o => o.year === selYear && o.month === selMonth)?.label}</span>{' '}
-              y el balance disponible volverá a <span className="font-semibold text-foreground">S/ {fmt(selBalance)}</span>.
+              y el balance disponible volverá a <span className="font-semibold text-foreground">{sym} {fmt(fromPen(selBalance))}</span>.
             </p>
             <div className="flex gap-2">
               <button

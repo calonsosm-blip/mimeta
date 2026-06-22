@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import { useCurrency } from '@/hooks/useCurrency'
 
 interface Debt {
   id: string
@@ -17,10 +18,7 @@ interface Debt {
 interface Props {
   debts: Debt[]
   userId: string
-}
-
-function fmt(n: number) {
-  return new Intl.NumberFormat('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n)
+  baseCurrency: 'PEN' | 'USD'
 }
 
 const EMPTY_FORM = {
@@ -28,8 +26,9 @@ const EMPTY_FORM = {
   monthly_payment: '', payment_day: '15', interest_rate: '',
 }
 
-export function DebtsClient({ debts: initial, userId }: Props) {
+export function DebtsClient({ debts: initial, userId, baseCurrency }: Props) {
   const supabase = createClient()
+  const { sym, fromPen, fmt } = useCurrency(baseCurrency)
   const [debts, setDebts]     = useState(initial)
   const [showForm, setShowForm] = useState(false)
   const [editing, setEditing]   = useState<Debt | null>(null)
@@ -130,11 +129,11 @@ export function DebtsClient({ debts: initial, userId }: Props) {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="rounded-xl border border-border bg-card p-4">
             <p className="text-xs text-muted-foreground">Deuda total activa</p>
-            <p className="mt-1 text-xl font-bold text-foreground">S/ {fmt(totalDebt)}</p>
+            <p className="mt-1 text-xl font-bold text-foreground">{sym} {fmt(fromPen(totalDebt))}</p>
           </div>
           <div className="rounded-xl border border-border bg-card p-4">
             <p className="text-xs text-muted-foreground">Cuotas mensuales</p>
-            <p className="mt-1 text-xl font-bold text-foreground">S/ {fmt(totalMonthly)}</p>
+            <p className="mt-1 text-xl font-bold text-foreground">{sym} {fmt(fromPen(totalMonthly))}</p>
           </div>
         </div>
       )}
@@ -171,7 +170,7 @@ export function DebtsClient({ debts: initial, userId }: Props) {
               <div className="space-y-1">
                 <div className="flex justify-between text-xs text-muted-foreground">
                   <span>Pagado {pct}%</span>
-                  <span>S/ {fmt(debt.initial_balance - debt.current_balance)} de S/ {fmt(debt.initial_balance)}</span>
+                  <span>{sym} {fmt(fromPen(debt.initial_balance - debt.current_balance))} de {sym} {fmt(fromPen(debt.initial_balance))}</span>
                 </div>
                 <div className="h-2.5 w-full rounded-full bg-muted">
                   <div className="h-full rounded-full bg-emerald-500 transition-all" style={{ width: `${pct}%` }} />
@@ -182,11 +181,11 @@ export function DebtsClient({ debts: initial, userId }: Props) {
               <div className="grid grid-cols-3 sm:grid-cols-3 gap-2 sm:gap-3 text-sm">
                 <div>
                   <p className="text-xs text-muted-foreground">Saldo pendiente</p>
-                  <p className={`font-semibold ${isOverdue ? 'text-red-600 dark:text-red-400' : 'text-foreground'}`}>S/ {fmt(debt.current_balance)}</p>
+                  <p className={`font-semibold ${isOverdue ? 'text-red-600 dark:text-red-400' : 'text-foreground'}`}>{sym} {fmt(fromPen(debt.current_balance))}</p>
                 </div>
                 <div>
                   <p className="text-xs text-muted-foreground">Cuota mensual</p>
-                  <p className="font-semibold text-foreground">S/ {fmt(debt.monthly_payment)}</p>
+                  <p className="font-semibold text-foreground">{sym} {fmt(fromPen(debt.monthly_payment))}</p>
                 </div>
                 <div>
                   <p className="text-xs text-muted-foreground">Meses restantes</p>
@@ -238,7 +237,7 @@ export function DebtsClient({ debts: initial, userId }: Props) {
               <div key={debt.id} className="flex items-center justify-between rounded-lg border border-border bg-muted px-4 py-3">
                 <div>
                   <p className="text-sm font-medium text-muted-foreground line-through">{debt.creditor}</p>
-                  <p className="text-xs text-muted-foreground">S/ {fmt(debt.initial_balance)}</p>
+                  <p className="text-xs text-muted-foreground">{sym} {fmt(fromPen(debt.initial_balance))}</p>
                 </div>
                 <button onClick={() => toggleActive(debt)} className="text-xs text-muted-foreground hover:text-primary">Reactivar</button>
               </div>

@@ -7,6 +7,7 @@ import {
   Tooltip, Legend, ResponsiveContainer,
 } from 'recharts'
 import { ChevronDown, FileSpreadsheet, FileText, SlidersHorizontal, X } from 'lucide-react'
+import { useCurrency } from '@/hooks/useCurrency'
 
 interface Transaction {
   id: string
@@ -31,14 +32,12 @@ interface Props {
   to: string
   currentYear: number
   currentMonth: number
+  baseCurrency: 'PEN' | 'USD'
 }
 
 const MONTHS     = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic']
 const MONTHS_LONG = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre']
 
-function fmt(n: number) {
-  return new Intl.NumberFormat('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n)
-}
 function fmtShort(n: number) {
   return new Intl.NumberFormat('es-PE', { minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(n)
 }
@@ -49,8 +48,9 @@ function reportTitle(mode: Mode, year: number, month: number, from: string, to: 
   return `Año ${year}`
 }
 
-export function MonthlyReportClient({ transactions, mode, year, month, from, to, currentYear, currentMonth }: Props) {
+export function MonthlyReportClient({ transactions, mode, year, month, from, to, currentYear, currentMonth, baseCurrency }: Props) {
   const router = useRouter()
+  const { sym, fromPen, fmt } = useCurrency(baseCurrency)
 
   // Config modal state
   const [configOpen,  setConfigOpen]  = useState(false)
@@ -216,11 +216,11 @@ export function MonthlyReportClient({ transactions, mode, year, month, from, to,
     doc.text('Balance', 146, 37)
     doc.setFontSize(12)
     doc.setTextColor(16, 185, 129)
-    doc.text(`S/ ${fmt(totalIncome)}`, 14, 44)
+    doc.text(`${sym} ${fmt(fromPen(totalIncome))}`, 14, 44)
     doc.setTextColor(100, 116, 139)
-    doc.text(`S/ ${fmt(totalExpenses)}`, 80, 44)
+    doc.text(`${sym} ${fmt(fromPen(totalExpenses))}`, 80, 44)
     doc.setTextColor(totalBalance >= 0 ? 16 : 239, totalBalance >= 0 ? 185 : 68, totalBalance >= 0 ? 129 : 68)
-    doc.text(`S/ ${fmt(totalBalance)}`, 146, 44)
+    doc.text(`${sym} ${fmt(fromPen(totalBalance))}`, 146, 44)
 
     // Tabla de transacciones
     autoTable(doc, {
@@ -406,13 +406,13 @@ export function MonthlyReportClient({ transactions, mode, year, month, from, to,
         <div className="rounded-xl border border-border bg-card p-3 sm:p-6 shadow-sm">
           <p className="text-xs sm:text-sm font-medium text-muted-foreground">Ingresos</p>
           <p className="mt-1 sm:mt-2 text-base sm:text-2xl font-bold text-emerald-500 dark:text-emerald-400 truncate">
-            S/ {fmt(totalIncome)}
+            {sym} {fmt(fromPen(totalIncome))}
           </p>
         </div>
         <div className="rounded-xl border border-border bg-card p-3 sm:p-6 shadow-sm">
           <p className="text-xs sm:text-sm font-medium text-muted-foreground">Egresos</p>
           <p className="mt-1 sm:mt-2 text-base sm:text-2xl font-bold text-slate-500 dark:text-slate-400 truncate">
-            S/ {fmt(totalExpenses)}
+            {sym} {fmt(fromPen(totalExpenses))}
           </p>
         </div>
         <div className={`rounded-xl border p-3 sm:p-6 shadow-sm ${
@@ -422,7 +422,7 @@ export function MonthlyReportClient({ transactions, mode, year, month, from, to,
           <p className={`mt-1 sm:mt-2 text-base sm:text-2xl font-bold truncate ${
             totalBalance >= 0 ? 'text-accent-foreground' : 'text-red-600 dark:text-red-400'
           }`}>
-            S/ {fmt(totalBalance)}
+            {sym} {fmt(fromPen(totalBalance))}
           </p>
         </div>
       </div>
@@ -452,7 +452,7 @@ export function MonthlyReportClient({ transactions, mode, year, month, from, to,
                 />
                 <Tooltip
                   formatter={(value: number, name: string) => [
-                    `S/ ${fmt(value)}`,
+                    `${sym} ${fmt(fromPen(value))}`,
                     name === 'income' ? 'Ingresos' : 'Egresos',
                   ]}
                   contentStyle={{
@@ -485,7 +485,7 @@ export function MonthlyReportClient({ transactions, mode, year, month, from, to,
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between mb-1">
                       <span className="text-sm font-medium text-foreground truncate">{name}</span>
-                      <span className="text-sm font-semibold text-foreground ml-4 shrink-0">S/ {fmt(total)}</span>
+                      <span className="text-sm font-semibold text-foreground ml-4 shrink-0">{sym} {fmt(fromPen(total))}</span>
                     </div>
                     <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden">
                       <div className="h-full rounded-full bg-primary rainbow-bar transition-all" style={{ width: `${pct}%` }} />
@@ -499,7 +499,7 @@ export function MonthlyReportClient({ transactions, mode, year, month, from, to,
           <div className="px-4 sm:px-6 py-3 border-t border-border bg-muted/30 rounded-b-xl">
             <div className="flex justify-between text-sm font-semibold text-foreground">
               <span>Total egresos</span>
-              <span>S/ {fmt(totalExpenses)}</span>
+              <span>{sym} {fmt(fromPen(totalExpenses))}</span>
             </div>
           </div>
         </div>

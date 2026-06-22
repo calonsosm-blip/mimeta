@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import { useCurrency } from '@/hooks/useCurrency'
 import { CategoryPanel } from './CategoryPanel'
 import { ArrowLeft, Bookmark, ClipboardList, Settings2, Trash2 } from 'lucide-react'
 
@@ -28,21 +29,19 @@ interface Props {
   userId: string
   selectedYear: number
   selectedMonth: number
+  baseCurrency: 'PEN' | 'USD'
 }
 
 const MONTHS_LONG = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre']
 
-function fmt(n: number) {
-  return new Intl.NumberFormat('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n)
-}
-
 
 export function BudgetsClient({
   budgets: initialBudgets, allCategories, actualByCategory,
-  templates: initialTemplates, userId, selectedYear, selectedMonth,
+  templates: initialTemplates, userId, selectedYear, selectedMonth, baseCurrency,
 }: Props) {
   const supabase = createClient()
   const router = useRouter()
+  const { sym, fromPen, fmt } = useCurrency(baseCurrency)
 
   const now = new Date()
   const currentYear = now.getFullYear()
@@ -414,7 +413,7 @@ export function BudgetsClient({
         ].map(card => (
           <div key={card.label} className="rounded-xl border border-border bg-card p-3 sm:p-4 shadow-sm">
             <p className="text-xs text-muted-foreground truncate">{card.label}</p>
-            <p className={`mt-1 text-base sm:text-xl font-bold truncate ${card.color}`}>S/ {fmt(card.value)}</p>
+            <p className={`mt-1 text-base sm:text-xl font-bold truncate ${card.color}`}>{sym} {fmt(fromPen(card.value))}</p>
           </div>
         ))}
       </div>
@@ -459,7 +458,7 @@ export function BudgetsClient({
                       </div>
                     </td>
                     <td className={`px-4 py-3 text-right font-medium ${over ? 'text-red-500' : 'text-foreground/80'}`}>
-                      S/ {fmt(actual)}
+                      {sym} {fmt(fromPen(actual))}
                     </td>
                     <td className="px-4 py-3 w-40">
                       {budget > 0 ? (
@@ -545,7 +544,7 @@ export function BudgetsClient({
                 {budgets.map(b => (
                   <li key={b.id} className="flex justify-between">
                     <span>{b.categories?.name}</span>
-                    <span className="font-medium">S/ {fmt(parseFloat(amounts[b.category_id] ?? '0') || 0)}</span>
+                    <span className="font-medium">{sym} {fmt(parseFloat(amounts[b.category_id] ?? '0') || 0)}</span>
                   </li>
                 ))}
               </ul>

@@ -228,13 +228,14 @@ export function DashboardClient({
       {/* Termómetro + Alertas */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <MonthThermometer
-          expenses={balance.expenses}
-          income={balance.income}
-          budget={totalBudget}
+          expenses={toBase(balance.expenses)}
+          income={toBase(balance.income)}
+          budget={toBase(totalBudget)}
           today={today}
           daysInMonth={daysInMonth}
           invisible={invisible}
           isCurrentMonth={isCurrentMonth}
+          sym={sym}
         />
 
         {/* Próximos recordatorios */}
@@ -274,7 +275,11 @@ export function DashboardClient({
 
       {/* Distribución de gastos + Transacciones recientes */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-        <ExpenseDonutChart data={expenseByCategory} invisible={invisible} />
+        <ExpenseDonutChart
+          data={expenseByCategory.map(d => ({ ...d, total: toBase(d.total) }))}
+          invisible={invisible}
+          sym={sym}
+        />
 
         {/* Transacciones recientes */}
         <div className="rounded-xl border border-border bg-card shadow-sm">
@@ -315,7 +320,7 @@ export function DashboardClient({
                       ? 'text-emerald-600 dark:text-emerald-400'
                       : 'text-slate-500 dark:text-slate-400'
                   }`}>
-                    {tx.type === 'income' ? '+' : '-'} {sym} {mask(fmt(tx.amount_pen))}
+                    {tx.type === 'income' ? '+' : '-'} {sym} {mask(fmt(toBase(tx.amount_pen)))}
                   </span>
                 </li>
               ))}

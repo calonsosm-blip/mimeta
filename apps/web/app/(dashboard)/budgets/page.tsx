@@ -15,7 +15,7 @@ export default async function BudgetsPage({ searchParams }: Props) {
   const month = parseInt(params.month ?? '') || now.getMonth() + 1
   const daysInMonth = new Date(year, month, 0).getDate()
 
-  const [budgetRes, allCatRes, actualRes, templateRes] = await Promise.all([
+  const [budgetRes, allCatRes, actualRes, templateRes, profileRes] = await Promise.all([
     // Solo categorías que tienen fila de presupuesto en este mes
     supabase
       .from('budgets')
@@ -44,6 +44,7 @@ export default async function BudgetsPage({ searchParams }: Props) {
       .select('id, name, items, created_at')
       .eq('user_id', user!.id)
       .order('created_at', { ascending: false }),
+    supabase.from('profiles').select('base_currency').eq('id', user!.id).single(),
   ])
 
   const actualByCategory: Record<string, number> = {}
@@ -69,6 +70,7 @@ export default async function BudgetsPage({ searchParams }: Props) {
       userId={user!.id}
       selectedYear={year}
       selectedMonth={month}
+      baseCurrency={(profileRes.data?.base_currency as 'PEN' | 'USD') ?? 'PEN'}
     />
   )
 }

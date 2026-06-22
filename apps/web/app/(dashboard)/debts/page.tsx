@@ -5,11 +5,16 @@ export default async function DebtsPage() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
-  const { data: debts } = await supabase
-    .from('debts')
-    .select('*')
-    .eq('user_id', user!.id)
-    .order('created_at', { ascending: false })
+  const [debtsRes, profileRes] = await Promise.all([
+    supabase.from('debts').select('*').eq('user_id', user!.id).order('created_at', { ascending: false }),
+    supabase.from('profiles').select('base_currency').eq('id', user!.id).single(),
+  ])
 
-  return <DebtsClient debts={debts ?? []} userId={user!.id} />
+  return (
+    <DebtsClient
+      debts={debtsRes.data ?? []}
+      userId={user!.id}
+      baseCurrency={(profileRes.data?.base_currency as 'PEN' | 'USD') ?? 'PEN'}
+    />
+  )
 }

@@ -10,7 +10,7 @@ const COLORS = [
 ]
 
 interface CategoryData { name: string; total: number }
-interface Props { data: CategoryData[]; invisible?: boolean }
+interface Props { data: CategoryData[]; invisible?: boolean; sym?: string }
 
 function fmt(n: number) {
   return new Intl.NumberFormat('es', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n)
@@ -18,7 +18,7 @@ function fmt(n: number) {
 
 const TOP_N = 6
 
-export function ExpenseDonutChart({ data, invisible = false }: Props) {
+export function ExpenseDonutChart({ data, invisible = false, sym = 'S/' }: Props) {
   const [viewMode, setViewMode] = useState<'percent' | 'amount'>('percent')
   const isMobile = useIsMobile()
 
@@ -91,7 +91,7 @@ export function ExpenseDonutChart({ data, invisible = false }: Props) {
               </Pie>
               <Tooltip
                 formatter={(value, name) => [
-                  invisible ? '••••' : `S/ ${fmt(Number(value))}`,
+                  invisible ? '••••' : `${sym} ${fmt(Number(value))}`,
                   String(name),
                 ]}
                 contentStyle={{
@@ -107,7 +107,7 @@ export function ExpenseDonutChart({ data, invisible = false }: Props) {
           <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
             <p className="text-xs text-muted-foreground leading-none">Total</p>
             <p className="text-sm font-bold text-foreground mt-0.5">
-              {invisible ? '••••' : `S/ ${fmt(total)}`}
+              {invisible ? '••••' : `${sym} ${fmt(total)}`}
             </p>
           </div>
         </div>
@@ -126,7 +126,7 @@ export function ExpenseDonutChart({ data, invisible = false }: Props) {
                   ? '••••'
                   : viewMode === 'percent'
                   ? `${item.percent.toFixed(1)}%`
-                  : `S/ ${fmt(item.value)}`}
+                  : `${sym} ${fmt(item.value)}`}
               </span>
             </div>
           ))}
@@ -140,7 +140,7 @@ export function ExpenseDonutChart({ data, invisible = false }: Props) {
                   ? '••••'
                   : viewMode === 'percent'
                   ? `${othersPercent.toFixed(1)}%`
-                  : `S/ ${fmt(othersValue)}`}
+                  : `${sym} ${fmt(othersValue)}`}
               </span>
             </div>
           )}

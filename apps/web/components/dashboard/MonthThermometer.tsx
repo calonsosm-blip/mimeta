@@ -8,13 +8,14 @@ interface Props {
   daysInMonth: number
   invisible: boolean
   isCurrentMonth: boolean
+  sym: string
 }
 
 function fmt(n: number) {
   return new Intl.NumberFormat('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n)
 }
 
-export function MonthThermometer({ expenses, income, budget, today, daysInMonth, invisible, isCurrentMonth }: Props) {
+export function MonthThermometer({ expenses, income, budget, today, daysInMonth, invisible, isCurrentMonth, sym }: Props) {
   const hasBudget = budget > 0
 
   const spentPct = hasBudget ? Math.min((expenses / budget) * 100, 100) : 0
@@ -74,26 +75,26 @@ export function MonthThermometer({ expenses, income, budget, today, daysInMonth,
       <div className="grid grid-cols-2 sm:grid-cols-2 gap-3 text-sm">
         <div>
           <p className="text-xs text-muted-foreground">Gastado</p>
-          <p className="font-semibold text-foreground">S/ {invisible ? '••••' : fmt(expenses)}</p>
+          <p className="font-semibold text-foreground">{sym} {invisible ? '••••' : fmt(expenses)}</p>
         </div>
         {hasBudget ? (
           <>
             <div>
               <p className="text-xs text-muted-foreground">Presupuesto</p>
-              <p className="font-semibold text-foreground">S/ {invisible ? '••••' : fmt(budget)}</p>
+              <p className="font-semibold text-foreground">{sym} {invisible ? '••••' : fmt(budget)}</p>
             </div>
             {isCurrentMonth && !alreadyOver && (
               <div>
                 <p className="text-xs text-muted-foreground">Margen por día</p>
                 <p className={`font-semibold ${dailyMargin < 0 ? 'text-red-600 dark:text-red-400' : 'text-foreground'}`}>
-                  {invisible ? '••••' : `S/ ${fmt(Math.max(dailyMargin, 0))} / día`}
+                  {invisible ? '••••' : `${sym} ${fmt(Math.max(dailyMargin, 0))} / día`}
                 </p>
               </div>
             )}
             <div>
               <p className="text-xs text-muted-foreground">{alreadyOver ? 'Excedido en' : 'Disponible'}</p>
               <p className={`font-semibold ${alreadyOver ? 'text-red-600 dark:text-red-400' : 'text-foreground'}`}>
-                S/ {invisible ? '••••' : fmt(Math.abs(budget - expenses))}
+                {sym} {invisible ? '••••' : fmt(Math.abs(budget - expenses))}
               </p>
             </div>
           </>

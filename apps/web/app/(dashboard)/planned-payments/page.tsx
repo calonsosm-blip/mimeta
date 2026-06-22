@@ -5,7 +5,7 @@ export default async function PlannedPaymentsPage() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
-  const [paymentsRes, catRes] = await Promise.all([
+  const [paymentsRes, catRes, profileRes] = await Promise.all([
     supabase
       .from('planned_payments')
       .select('*, categories(name)')
@@ -16,6 +16,7 @@ export default async function PlannedPaymentsPage() {
       .select('id, name, type')
       .eq('user_id', user!.id)
       .order('sort_order'),
+    supabase.from('profiles').select('base_currency').eq('id', user!.id).single(),
   ])
 
   return (
@@ -23,6 +24,7 @@ export default async function PlannedPaymentsPage() {
       payments={(paymentsRes.data ?? []) as any}
       categories={catRes.data ?? []}
       userId={user!.id}
+      baseCurrency={(profileRes.data?.base_currency as 'PEN' | 'USD') ?? 'PEN'}
     />
   )
 }

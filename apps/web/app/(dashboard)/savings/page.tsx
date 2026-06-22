@@ -10,7 +10,7 @@ export default async function SavingsPage() {
   const month = today.getMonth() + 1
   const todayStr  = today.toISOString().split('T')[0]
 
-  const [snapshotsRes, goalsRes, cumulativeRes, balanceRpc] = await Promise.all([
+  const [snapshotsRes, goalsRes, cumulativeRes, balanceRpc, profileRes] = await Promise.all([
     supabase
       .from('savings_snapshots')
       .select('*')
@@ -34,6 +34,7 @@ export default async function SavingsPage() {
       p_year:    year,
       p_month:   month,
     }),
+    supabase.from('profiles').select('base_currency').eq('id', user!.id).single(),
   ])
 
   const accumulatedBalance = ((cumulativeRes.data ?? []) as any[]).reduce((sum, tx) => {
@@ -52,6 +53,7 @@ export default async function SavingsPage() {
       accumulatedBalance={Math.max(accumulatedBalance, 0)}
       monthlyBalance={monthlyBalance}
       currentMonthLabel={monthlyLabel}
+      baseCurrency={(profileRes.data?.base_currency as 'PEN' | 'USD') ?? 'PEN'}
     />
   )
 }

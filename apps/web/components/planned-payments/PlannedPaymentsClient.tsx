@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import { useCurrency } from '@/hooks/useCurrency'
 
 interface Category { id: string; name: string; type: string }
 interface Payment {
@@ -22,15 +23,12 @@ interface Props {
   payments: Payment[]
   categories: Category[]
   userId: string
+  baseCurrency: 'PEN' | 'USD'
 }
 
 const FREQ_LABELS: Record<string, string> = {
   daily: 'Diario', weekly: 'Semanal', biweekly: 'Quincenal',
   monthly: 'Mensual', annual: 'Anual',
-}
-
-function fmt(n: number) {
-  return new Intl.NumberFormat('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n)
 }
 
 function daysUntil(dateStr: string) {
@@ -45,8 +43,9 @@ const EMPTY_FORM = {
   day_of_month: '', auto_register: false,
 }
 
-export function PlannedPaymentsClient({ payments: initial, categories, userId }: Props) {
+export function PlannedPaymentsClient({ payments: initial, categories, userId, baseCurrency }: Props) {
   const supabase = createClient()
+  const { sym, toBase, fmt } = useCurrency(baseCurrency)
   const [payments, setPayments]     = useState(initial)
   const [showForm, setShowForm]     = useState(false)
   const [editing, setEditing]       = useState<Payment | null>(null)
@@ -169,7 +168,7 @@ export function PlannedPaymentsClient({ payments: initial, categories, userId }:
                   <p className="text-xs text-muted-foreground mt-0.5">{p.categories?.name ?? 'Sin categoría'}</p>
                 </div>
                 <div className="text-right shrink-0">
-                  <p className="font-bold text-foreground">{p.currency === 'USD' ? '$' : 'S/'} {fmt(p.amount)}</p>
+                  <p className="font-bold text-foreground">{sym} {fmt(toBase(p.amount, p.currency as 'PEN' | 'USD'))}</p>
                   <p className={`text-xs mt-0.5 ${
                     isOverdue ? 'text-red-500 dark:text-red-400 font-medium'
                     : isSoon  ? 'text-amber-600 dark:text-amber-400 font-medium'
