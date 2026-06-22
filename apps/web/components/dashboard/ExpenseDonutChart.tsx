@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts'
+import { useIsMobile } from '@/hooks/useIsMobile'
 
 const COLORS = [
   '#ea580c', '#10b981', '#f59e0b', '#8b5cf6', '#06b6d4',
@@ -15,8 +16,11 @@ function fmt(n: number) {
   return new Intl.NumberFormat('es', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n)
 }
 
+const TOP_N = 6
+
 export function ExpenseDonutChart({ data, invisible = false }: Props) {
   const [viewMode, setViewMode] = useState<'percent' | 'amount'>('percent')
+  const isMobile = useIsMobile()
 
   if (data.length === 0) {
     return (
@@ -33,6 +37,12 @@ export function ExpenseDonutChart({ data, invisible = false }: Props) {
     value: d.total,
     percent: total > 0 ? (d.total / total) * 100 : 0,
   }))
+
+  const visibleData   = isMobile ? chartData.slice(0, TOP_N) : chartData
+  const othersData    = isMobile ? chartData.slice(TOP_N) : []
+  const othersValue   = othersData.reduce((s, d) => s + d.value, 0)
+  const othersPercent = total > 0 ? (othersValue / total) * 100 : 0
+  const hasOthers     = othersData.length > 0
 
   return (
     <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
@@ -98,7 +108,7 @@ export function ExpenseDonutChart({ data, invisible = false }: Props) {
 
         {/* Leyenda */}
         <div className="flex-1 space-y-2.5 min-w-0">
-          {chartData.map((item, i) => (
+          {visibleData.map((item, i) => (
             <div key={i} className="flex items-center gap-2">
               <span
                 className="shrink-0 w-2.5 h-2.5 rounded-full"
@@ -114,6 +124,20 @@ export function ExpenseDonutChart({ data, invisible = false }: Props) {
               </span>
             </div>
           ))}
+
+          {hasOthers && (
+            <div className="flex items-center gap-2">
+              <span className="shrink-0 w-2.5 h-2.5 rounded-full bg-slate-400" />
+              <span className="text-xs text-muted-foreground flex-1">Otros ({chartData.length - TOP_N})</span>
+              <span className="text-xs font-semibold text-foreground shrink-0 tabular-nums">
+                {invisible
+                  ? '••••'
+                  : viewMode === 'percent'
+                  ? `${othersPercent.toFixed(1)}%`
+                  : `S/ ${fmt(othersValue)}`}
+              </span>
+            </div>
+          )}
         </div>
       </div>
     </div>
