@@ -8,6 +8,20 @@ const manrope = Manrope({ subsets: ['latin'], variable: '--font-sans' })
 export const metadata: Metadata = {
   title: 'MiMeta — Tu dinero, tus metas',
   description: 'Controla tus finanzas, ahorra con inteligencia y cumple tus metas.',
+  metadataBase: new URL('https://mimeta-web.vercel.app'),
+  openGraph: {
+    title: 'MiMeta — Tu dinero, tus metas',
+    description: 'Controla tus finanzas, ahorra con inteligencia y cumple tus metas.',
+    url: 'https://mimeta-web.vercel.app',
+    siteName: 'MiMeta',
+    type: 'website',
+    locale: 'es_PE',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'MiMeta — Tu dinero, tus metas',
+    description: 'Controla tus finanzas, ahorra con inteligencia y cumple tus metas.',
+  },
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
