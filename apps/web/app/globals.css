@@ -34,6 +34,31 @@
 [data-accent="oro"]:not(.dark)       { --brand-bg: #fffbeb; --brand-fg: #92400e; --background: #fffbeb; --card: #ffffff; }
 [data-accent="oro"].dark             { --brand-bg: #1a1306; --brand-fg: #fbbf24; --background: #1a1306; --card: #2b2008; --foreground: #f5e6c0; --border: #3d2e0e; --sidebar: #110e04; --sidebar-border: #3d2e0e; }
 
+/* ── Carbón ── */
+[data-accent="carbon"]             { --brand: #EA580C; --brand-2: #FB923C; }
+[data-accent="carbon"]:not(.dark)  { --brand-bg: #FFF7ED; --brand-fg: #9A3412; --background: #F5F5F4; --card: #FFFFFF; --border: #D6D3D1; --foreground: #1C1917; }
+[data-accent="carbon"].dark        { --brand: #FB923C; --brand-bg: #1C1917; --brand-fg: #FB923C; --background: #0C0A09; --card: #1C1917; --border: #292524; --foreground: #FAFAF9; --sidebar: #080605; --sidebar-border: #292524; }
+
+/* ── Océano ── */
+[data-accent="oceano"]             { --brand: #0E7490; --brand-2: #22D3EE; }
+[data-accent="oceano"]:not(.dark)  { --brand-bg: #ECFEFF; --brand-fg: #0E7490; --background: #F0FAFB; --card: #FFFFFF; --border: #A5F3FC; --foreground: #082F3E; }
+[data-accent="oceano"].dark        { --brand: #22D3EE; --brand-bg: #051520; --brand-fg: #22D3EE; --background: #020B12; --card: #051520; --border: #0C3347; --foreground: #F0FAFB; --sidebar: #010810; --sidebar-border: #0C3347; }
+
+/* ── Aurora ── */
+[data-accent="aurora"]             { --brand: #7C3AED; --brand-2: #A78BFA; }
+[data-accent="aurora"]:not(.dark)  { --brand-bg: #F5F3FF; --brand-fg: #6D28D9; --background: #F5F3FF; --card: #FFFFFF; --border: #DDD6FE; --foreground: #1F1335; }
+[data-accent="aurora"].dark        { --brand: #A78BFA; --brand-bg: #1A1035; --brand-fg: #A78BFA; --background: #0F0A1E; --card: #1A1035; --border: #2D1F5E; --foreground: #F5F3FF; --sidebar: #0A0618; --sidebar-border: #2D1F5E; }
+
+/* ── Bosque ── */
+[data-accent="bosque"]             { --brand: #16A34A; --brand-2: #4ADE80; }
+[data-accent="bosque"]:not(.dark)  { --brand-bg: #F0FDF4; --brand-fg: #166534; --background: #F0FDF4; --card: #FFFFFF; --border: #BBF7D0; --foreground: #0A1F10; }
+[data-accent="bosque"].dark        { --brand: #4ADE80; --brand-bg: #061A0B; --brand-fg: #4ADE80; --background: #020D05; --card: #061A0B; --border: #14532D; --foreground: #F0FDF4; --sidebar: #010802; --sidebar-border: #14532D; }
+
+/* ── Sakura ── */
+[data-accent="sakura"]             { --brand: #DB2777; --brand-2: #F472B6; }
+[data-accent="sakura"]:not(.dark)  { --brand-bg: #FDF2F8; --brand-fg: #9D174D; --background: #FDF2F8; --card: #FFFFFF; --border: #FBCFE8; --foreground: #1A0810; }
+[data-accent="sakura"].dark        { --brand: #F472B6; --brand-bg: #1C0316; --brand-fg: #F472B6; --background: #10010A; --card: #1C0316; --border: #831843; --foreground: #FDF2F8; --sidebar: #0A0108; --sidebar-border: #831843; }
+
 /* ── Modo claro ── */
 :root {
   --background:            #f8fafc;
