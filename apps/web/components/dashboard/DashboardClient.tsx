@@ -73,24 +73,69 @@ export function DashboardClient({
         <div className="flex items-center gap-3">
           <div>
             <h1 className="text-xl sm:text-2xl font-bold text-foreground">Hola, {firstName} 👋</h1>
-            <p className="text-sm text-muted-foreground mt-0.5">
+
+            {/* Subtítulo en desktop */}
+            <p className="hidden sm:block text-sm text-muted-foreground mt-0.5">
               {isCurrentMonth ? 'Resumen del mes actual' : 'Resumen del período seleccionado'}
             </p>
+
+            {/* Selector sutil en móvil */}
+            <div className="flex items-center gap-1 mt-0.5 sm:hidden">
+              <button onClick={prevMonth} className="text-muted-foreground/60 hover:text-foreground transition-colors">
+                <ChevronLeft className="h-3.5 w-3.5" />
+              </button>
+
+              <div className="relative">
+                <span className="text-sm text-muted-foreground cursor-pointer">
+                  {MONTHS_LONG[selectedMonth - 1].charAt(0).toUpperCase() + MONTHS_LONG[selectedMonth - 1].slice(1)}
+                </span>
+                <select
+                  value={selectedMonth}
+                  onChange={e => changePeriod(selectedYear, parseInt(e.target.value))}
+                  className="absolute inset-0 opacity-0 cursor-pointer w-full"
+                >
+                  {MONTHS_LONG.map((name, i) => (
+                    <option key={i + 1} value={i + 1}>{name.charAt(0).toUpperCase() + name.slice(1)}</option>
+                  ))}
+                </select>
+              </div>
+
+              <span className="text-muted-foreground/40 text-xs">·</span>
+
+              <div className="relative">
+                <span className="text-sm text-muted-foreground cursor-pointer">{selectedYear}</span>
+                <select
+                  value={selectedYear}
+                  onChange={e => changePeriod(parseInt(e.target.value), selectedMonth)}
+                  className="absolute inset-0 opacity-0 cursor-pointer w-full"
+                >
+                  {years.map(y => <option key={y} value={y}>{y}</option>)}
+                </select>
+              </div>
+
+              <button onClick={nextMonth} className="text-muted-foreground/60 hover:text-foreground transition-colors">
+                <ChevronRight className="h-3.5 w-3.5" />
+              </button>
+
+              {!isCurrentMonth && (
+                <button onClick={() => router.push('/')} className="text-xs text-primary ml-0.5">
+                  hoy
+                </button>
+              )}
+            </div>
           </div>
+
           <button
             onClick={() => setInvisible(v => !v)}
             className="flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
             title={invisible ? 'Mostrar saldos' : 'Ocultar saldos'}
           >
-            {invisible
-              ? <Eye className="h-4 w-4" />
-              : <EyeOff className="h-4 w-4" />
-            }
+            {invisible ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
           </button>
         </div>
 
-        {/* Navegación de período */}
-        <div className="flex flex-wrap items-center gap-1 sm:flex-nowrap sm:shrink-0">
+        {/* Navegación de período — solo desktop */}
+        <div className="hidden sm:flex items-center gap-1 shrink-0">
           <button onClick={prevMonth} className={navBtnClass} title="Mes anterior">
             <ChevronLeft className="h-4 w-4" />
           </button>
@@ -112,9 +157,7 @@ export function DashboardClient({
             onChange={e => changePeriod(parseInt(e.target.value), selectedMonth)}
             className={selectClass}
           >
-            {years.map(y => (
-              <option key={y} value={y}>{y}</option>
-            ))}
+            {years.map(y => <option key={y} value={y}>{y}</option>)}
           </select>
 
           <button onClick={nextMonth} className={navBtnClass} title="Mes siguiente">
