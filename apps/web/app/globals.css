@@ -58,7 +58,15 @@
 [data-accent="pride"]             { --brand: #7C3AED; --brand-2: #A78BFA; --rainbow: linear-gradient(to right, #EF4444, #F97316, #EAB308, #22C55E, #3B82F6, #8B5CF6); }
 [data-accent="pride"]:not(.dark)  { --brand-bg: #F5F3FF; --brand-fg: #6D28D9; --background: #FFFFFF; --card: #FAFAFA; --border: #E5E7EB; --foreground: #111827; }
 [data-accent="pride"].dark        { --brand: #A78BFA; --rainbow: linear-gradient(to right, #FCA5A5, #FDBA74, #FDE047, #86EFAC, #93C5FD, #C4B5FD); --brand-bg: #1A1035; --brand-fg: #A78BFA; --background: #0A0A0A; --card: #141414; --border: #2A2A2A; --foreground: #F9FAFB; --sidebar: #0A0A0A; --sidebar-border: #2A2A2A; }
-[data-accent="pride"] .rainbow-bar { background: var(--rainbow) !important; }
+[data-accent="pride"] .rainbow-bar  { background: var(--rainbow) !important; }
+[data-accent="pride"] .rainbow-bg   { background: var(--rainbow) !important; }
+[data-accent="pride"] .rainbow-text {
+  background: var(--rainbow);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+}
 
 /* ── Sakura ── */
 [data-accent="sakura"]             { --brand: #DB2777; --brand-2: #F472B6; }

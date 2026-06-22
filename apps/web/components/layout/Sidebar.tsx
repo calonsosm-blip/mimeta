@@ -53,7 +53,7 @@ interface SidebarProps {
 function UserAvatar({ name }: { name: string }) {
   const initials = name.split(' ').filter(Boolean).map(w => w[0]).slice(0, 2).join('').toUpperCase()
   return (
-    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground text-xs font-bold">
+    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary rainbow-bg text-primary-foreground text-xs font-bold">
       {initials || '?'}
     </div>
   )
@@ -110,7 +110,7 @@ export function Sidebar({ user, profile, isOpen = false, onClose }: SidebarProps
       <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-4">
         {NAV_GROUPS.map(group => (
           <div key={group.label}>
-            <p className="px-3 mb-1 text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">
+            <p className="px-3 mb-1 text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 rainbow-text">
               {group.label}
             </p>
             <div className="space-y-0.5">
@@ -129,7 +129,7 @@ export function Sidebar({ user, profile, isOpen = false, onClose }: SidebarProps
                     } ${isLocked ? 'opacity-50' : ''}`}
                   >
                     <Icon className="h-4 w-4 shrink-0" />
-                    <span>{item.label}</span>
+                    <span className={isActive ? 'rainbow-text' : ''}>{item.label}</span>
                     {isLocked && <Crown className="ml-auto h-3.5 w-3.5 text-amber-400 shrink-0" />}
                   </Link>
                 )
