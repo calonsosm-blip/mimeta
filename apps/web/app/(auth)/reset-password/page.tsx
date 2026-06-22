@@ -42,10 +42,12 @@ export default function ResetPasswordPage() {
       <div className="w-full max-w-sm space-y-7">
 
         <div className="flex items-center gap-3 justify-center">
-          <Image src="/mimeta-isotipo.png" alt="MiMeta" width={36} height={36} className="object-contain" />
+          <div className="rounded-full overflow-hidden w-9 h-9 shrink-0">
+            <Image src="/mimeta-isotipo.png" alt="MiMeta" width={36} height={36} className="object-contain" />
+          </div>
           <div>
             <p className="text-sm font-bold text-foreground leading-tight">MiMeta</p>
-            <p className="text-xs text-muted-foreground leading-tight">tu dinero, tus metas</p>
+            <p className="text-xs text-muted-foreground leading-tight">Tus metas, más cerca cada día.</p>
           </div>
         </div>
 

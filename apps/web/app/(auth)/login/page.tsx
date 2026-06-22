@@ -93,7 +93,9 @@ export default function LoginPage() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-muted px-4">
         <div className="w-full max-w-sm text-center space-y-5">
-          <Image src="/mimeta-isotipo.png" alt="MiMeta" width={56} height={56} className="mx-auto object-contain" />
+          <div className="rounded-full overflow-hidden w-14 h-14 mx-auto">
+            <Image src="/mimeta-isotipo.png" alt="MiMeta" width={56} height={56} className="object-contain" />
+          </div>
           <div className="rounded-2xl border border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950/30 p-6">
             <p className="font-semibold text-emerald-800 dark:text-emerald-300">¡Revisa tu correo!</p>
             <p className="mt-1.5 text-sm text-emerald-700 dark:text-emerald-400">
@@ -118,10 +120,12 @@ export default function LoginPage() {
       {/* Panel izquierdo — branding */}
       <div className="hidden lg:flex lg:w-[45%] flex-col justify-between bg-foreground p-12">
         <div className="flex items-center gap-3">
-          <Image src="/mimeta-isotipo.png" alt="MiMeta" width={36} height={36} className="object-contain" />
+          <div className="rounded-full overflow-hidden w-9 h-9 shrink-0">
+            <Image src="/mimeta-isotipo.png" alt="MiMeta" width={36} height={36} className="object-contain" />
+          </div>
           <div>
             <p className="text-sm font-bold text-background leading-tight">MiMeta</p>
-            <p className="text-xs text-background/50 leading-tight">tu dinero, tus metas</p>
+            <p className="text-xs text-background/50 leading-tight">Tus metas, más cerca cada día.</p>
           </div>
         </div>
         <div className="space-y-6">
@@ -129,10 +133,15 @@ export default function LoginPage() {
             Toma el control<br />de tus finanzas<br />personales
           </h2>
           <p className="text-sm text-background/60 leading-relaxed max-w-xs">
-            Registra ingresos y gastos, planifica tu presupuesto y alcanza tus metas de ahorro — todo en un solo lugar.
+            Entiende tu dinero sin complicaciones y llega a tus metas antes de lo que crees.
           </p>
           <div className="space-y-3">
-            {['Dashboard con termómetro de fin de mes', 'Metas de ahorro automáticas', 'Alertas de pagos recurrentes', 'Análisis con inteligencia artificial'].map(f => (
+            {[
+              'Ve en qué te gastas el dinero, al instante',
+              'Crea metas y sigue tu progreso automáticamente',
+              'Recibe alertas antes de que venzan tus pagos',
+              'Obtén análisis inteligentes de tus hábitos',
+            ].map(f => (
               <div key={f} className="flex items-center gap-2.5">
                 <div className="h-1.5 w-1.5 rounded-full bg-primary shrink-0" />
                 <span className="text-xs text-background/70">{f}</span>
@@ -140,7 +149,7 @@ export default function LoginPage() {
             ))}
           </div>
         </div>
-        <p className="text-xs text-background/30">© 2026 MiMeta · Tu dinero, tus metas, tu futuro</p>
+        <p className="text-xs text-background/30">© 2026 MiMeta · Tus metas, más cerca cada día.</p>
       </div>
 
       {/* Panel derecho — formulario */}
@@ -149,10 +158,12 @@ export default function LoginPage() {
 
           {/* Logo mobile */}
           <div className="flex lg:hidden items-center gap-3 justify-center">
-            <Image src="/mimeta-isotipo.png" alt="MiMeta" width={36} height={36} className="object-contain" />
+            <div className="rounded-full overflow-hidden w-9 h-9 shrink-0">
+              <Image src="/mimeta-isotipo.png" alt="MiMeta" width={36} height={36} className="object-contain" />
+            </div>
             <div>
               <p className="text-sm font-bold text-foreground leading-tight">MiMeta</p>
-              <p className="text-xs text-muted-foreground leading-tight">tu dinero, tus metas</p>
+              <p className="text-xs text-muted-foreground leading-tight">Tus metas, más cerca cada día.</p>
             </div>
           </div>
 
