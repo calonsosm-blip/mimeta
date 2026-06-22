@@ -130,7 +130,7 @@ export function Sidebar({ user, profile, isOpen = false, onClose }: SidebarProps
                   >
                     <Icon className="h-4 w-4 shrink-0" />
                     <span>{item.label}</span>
-                    {isLocked && <span className="ml-auto text-xs opacity-60">Pro</span>}
+                    {isLocked && <Crown className="ml-auto h-3.5 w-3.5 text-amber-400 shrink-0" />}
                   </Link>
                 )
               })}
