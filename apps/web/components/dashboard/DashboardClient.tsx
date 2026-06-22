@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Eye, EyeOff, ChevronLeft, ChevronRight } from 'lucide-react'
 import { MonthThermometer } from './MonthThermometer'
@@ -42,8 +42,22 @@ export function DashboardClient({
   totalBudget, today, daysInMonth,
   selectedYear, selectedMonth, isCurrentMonth, expenseByCategory, cumulativeBalance,
 }: Props) {
-  // Los totales vienen de amount_pen (siempre en PEN), símbolo refleja eso
-  const sym = 'S/'
+  const [liveRate, setLiveRate] = useState<number | null>(null)
+
+  // Si la moneda base es USD, obtener TC actual para convertir totales PEN → USD
+  useEffect(() => {
+    if (baseCurrency !== 'USD') return
+    const today = new Date().toISOString().slice(0, 10)
+    fetch(`/api/exchange-rate?date=${today}`)
+      .then(r => r.json())
+      .then(({ rate }) => { if (rate) setLiveRate(rate) })
+      .catch(() => {})
+  }, [baseCurrency])
+
+  // Convertir monto PEN al display en la moneda base
+  const toBase = (pen: number) =>
+    baseCurrency === 'USD' && liveRate ? pen / liveRate : pen
+  const sym = baseCurrency === 'USD' && liveRate ? '$' : 'S/'
   const [invisible, setInvisible] = useState(false)
   const router = useRouter()
   const isMobile = useIsMobile()
@@ -173,13 +187,13 @@ export function DashboardClient({
         <div className="rounded-xl border border-border bg-card p-3 sm:p-6 shadow-sm">
           <p className="text-xs sm:text-sm font-medium text-muted-foreground">Ingresos</p>
           <p className="mt-1 sm:mt-2 text-base sm:text-2xl font-bold text-emerald-500 dark:text-emerald-400 truncate">
-            {sym} {mask(fmt(balance.income))}
+            {sym} {mask(fmt(toBase(balance.income)))}
           </p>
         </div>
         <div className="rounded-xl border border-border bg-card p-3 sm:p-6 shadow-sm">
           <p className="text-xs sm:text-sm font-medium text-muted-foreground">Egresos</p>
           <p className="mt-1 sm:mt-2 text-base sm:text-2xl font-bold text-slate-500 dark:text-slate-400 truncate">
-            {sym} {mask(fmt(balance.expenses))}
+            {sym} {mask(fmt(toBase(balance.expenses)))}
           </p>
         </div>
         <div className={`rounded-xl border p-3 sm:p-6 shadow-sm ${
@@ -191,14 +205,14 @@ export function DashboardClient({
           <p className={`mt-1 sm:mt-2 text-base sm:text-2xl font-bold truncate ${
             balance.balance >= 0 ? 'text-accent-foreground' : 'text-red-600 dark:text-red-400'
           }`}>
-            {sym} {mask(fmt(balance.balance))}
+            {sym} {mask(fmt(toBase(balance.balance)))}
           </p>
           <p className="mt-1 hidden sm:block text-xs text-muted-foreground">
             Acumulado:{' '}
             <span className={`font-medium ${
               cumulativeBalance >= 0 ? 'text-primary' : 'text-red-500 dark:text-red-400'
             }`}>
-              {invisible ? '••••' : `${sym} ${fmt(cumulativeBalance)}`}
+              {invisible ? '••••' : `${sym} ${fmt(toBase(cumulativeBalance))}`}
             </span>
           </p>
         </div>
@@ -207,7 +221,7 @@ export function DashboardClient({
       <p className="sm:hidden text-xs text-muted-foreground -mt-2">
         Acumulado:{' '}
         <span className={`font-medium ${cumulativeBalance >= 0 ? 'text-primary' : 'text-red-500 dark:text-red-400'}`}>
-          {invisible ? '••••' : `${sym} ${fmt(cumulativeBalance)}`}
+          {invisible ? '••••' : `${sym} ${fmt(toBase(cumulativeBalance))}`}
         </span>
       </p>
 

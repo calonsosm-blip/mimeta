@@ -1,6 +1,6 @@
 ﻿'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { TransactionModal } from './TransactionModal'
 import { useIsMobile } from '@/hooks/useIsMobile'
@@ -35,25 +35,30 @@ function fmt(n: number) {
   return new Intl.NumberFormat('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n)
 }
 
-function displayAmount(tx: Transaction, baseCurrency: 'PEN' | 'USD') {
+function displayAmount(tx: Transaction, baseCurrency: 'PEN' | 'USD', liveRate: number | null) {
   if (tx.currency === baseCurrency) {
-    // Moneda de la transacción = moneda base → mostrar amount directo
     return {
       primary: `${baseCurrency === 'PEN' ? 'S/' : '$'} ${fmt(tx.amount)}`,
       secondary: null,
     }
   }
   if (baseCurrency === 'PEN') {
-    // Base PEN, transacción en USD → mostrar equivalente en PEN con nota original
+    // Base PEN, transacción en USD → equivalente en PEN con nota del original
     return {
       primary: `S/ ${fmt(tx.amount_pen)}`,
       secondary: `$ ${fmt(tx.amount)}`,
     }
   }
-  // Base USD, transacción en PEN → mostrar en PEN (no hay TC histórico para convertir)
+  // Base USD, transacción en PEN → convertir con TC actual si está disponible
+  if (liveRate) {
+    return {
+      primary: `$ ${fmt(tx.amount_pen / liveRate)}`,
+      secondary: `S/ ${fmt(tx.amount_pen)}`,
+    }
+  }
   return {
     primary: `S/ ${fmt(tx.amount_pen)}`,
-    secondary: 'PEN',
+    secondary: null,
   }
 }
 
@@ -62,6 +67,17 @@ const MONTHS = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov
 export function TransactionsClient({ transactions, categories, userId, baseCurrency }: Props) {
   const isMobile = useIsMobile()
   const [txList, setTxList] = useState(transactions)
+  const [liveRate, setLiveRate] = useState<number | null>(null)
+
+  // Obtener TC actual desde internet para convertir montos PEN → USD en display
+  useEffect(() => {
+    if (baseCurrency !== 'USD') return
+    const today = new Date().toISOString().slice(0, 10)
+    fetch(`/api/exchange-rate?date=${today}`)
+      .then(r => r.json())
+      .then(({ rate }) => { if (rate) setLiveRate(rate) })
+      .catch(() => {})
+  }, [baseCurrency])
   const [showModal, setShowModal] = useState(false)
   const [editing, setEditing] = useState<Transaction | null>(null)
   const [confirmDelete, setConfirmDelete] = useState<Transaction | null>(null)
@@ -209,7 +225,7 @@ export function TransactionsClient({ transactions, categories, userId, baseCurre
                       tx.type === 'income' ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-500 dark:text-slate-400'
                     }`}>
                       {(() => {
-                        const { primary, secondary } = displayAmount(tx, baseCurrency)
+                        const { primary, secondary } = displayAmount(tx, baseCurrency, liveRate)
                         return (
                           <>
                             {tx.type === 'income' ? '+' : '-'} {primary}
