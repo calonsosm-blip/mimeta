@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { Eye, EyeOff, ChevronLeft, ChevronRight } from 'lucide-react'
 import { MonthThermometer } from './MonthThermometer'
 import { ExpenseDonutChart } from './ExpenseDonutChart'
+import { useIsMobile } from '@/hooks/useIsMobile'
 
 interface Props {
   profile: { display_name: string | null; plan: string } | null
@@ -42,6 +43,7 @@ export function DashboardClient({
 }: Props) {
   const [invisible, setInvisible] = useState(false)
   const router = useRouter()
+  const isMobile = useIsMobile()
   const firstName = profile?.display_name?.split(' ')[0] ?? 'Usuario'
   const mask = (val: string) => invisible ? '••••••' : val
 
@@ -87,79 +89,79 @@ export function DashboardClient({
           </button>
         </div>
 
-        {/* Derecha: selector sutil móvil / controles desktop */}
+        {/* Derecha: selector de período */}
         <div className="shrink-0">
-          {/* Móvil */}
-          <div className="flex items-center gap-1 sm:hidden mt-1">
-            <button onClick={prevMonth} className="text-muted-foreground/60 hover:text-foreground transition-colors">
-              <ChevronLeft className="h-3.5 w-3.5" />
-            </button>
-            <div className="relative">
-              <span className="text-sm text-muted-foreground cursor-pointer">
-                {MONTHS_LONG[selectedMonth - 1].charAt(0).toUpperCase() + MONTHS_LONG[selectedMonth - 1].slice(1)}
-              </span>
+          {isMobile ? (
+            <div className="flex items-center gap-1 mt-1">
+              <button onClick={prevMonth} className="text-muted-foreground/60 hover:text-foreground transition-colors">
+                <ChevronLeft className="h-3.5 w-3.5" />
+              </button>
+              <div className="relative">
+                <span className="text-sm text-muted-foreground cursor-pointer">
+                  {MONTHS_LONG[selectedMonth - 1].charAt(0).toUpperCase() + MONTHS_LONG[selectedMonth - 1].slice(1)}
+                </span>
+                <select
+                  value={selectedMonth}
+                  onChange={e => changePeriod(selectedYear, parseInt(e.target.value))}
+                  className="absolute inset-0 opacity-0 cursor-pointer w-full"
+                >
+                  {MONTHS_LONG.map((name, i) => (
+                    <option key={i + 1} value={i + 1}>{name.charAt(0).toUpperCase() + name.slice(1)}</option>
+                  ))}
+                </select>
+              </div>
+              <span className="text-muted-foreground/40 text-xs">·</span>
+              <div className="relative">
+                <span className="text-sm text-muted-foreground cursor-pointer">{selectedYear}</span>
+                <select
+                  value={selectedYear}
+                  onChange={e => changePeriod(parseInt(e.target.value), selectedMonth)}
+                  className="absolute inset-0 opacity-0 cursor-pointer w-full"
+                >
+                  {years.map(y => <option key={y} value={y}>{y}</option>)}
+                </select>
+              </div>
+              <button onClick={nextMonth} className="text-muted-foreground/60 hover:text-foreground transition-colors">
+                <ChevronRight className="h-3.5 w-3.5" />
+              </button>
+              {!isCurrentMonth && (
+                <button onClick={() => router.push('/')} className="text-xs text-primary ml-0.5">hoy</button>
+              )}
+            </div>
+          ) : (
+            <div className="flex items-center gap-1">
+              <button onClick={prevMonth} className={navBtnClass} title="Mes anterior">
+                <ChevronLeft className="h-4 w-4" />
+              </button>
               <select
                 value={selectedMonth}
                 onChange={e => changePeriod(selectedYear, parseInt(e.target.value))}
-                className="absolute inset-0 opacity-0 cursor-pointer w-full"
+                className={selectClass}
               >
                 {MONTHS_LONG.map((name, i) => (
                   <option key={i + 1} value={i + 1}>{name.charAt(0).toUpperCase() + name.slice(1)}</option>
                 ))}
               </select>
-            </div>
-            <span className="text-muted-foreground/40 text-xs">·</span>
-            <div className="relative">
-              <span className="text-sm text-muted-foreground cursor-pointer">{selectedYear}</span>
               <select
                 value={selectedYear}
                 onChange={e => changePeriod(parseInt(e.target.value), selectedMonth)}
-                className="absolute inset-0 opacity-0 cursor-pointer w-full"
+                className={selectClass}
               >
                 {years.map(y => <option key={y} value={y}>{y}</option>)}
               </select>
-            </div>
-            <button onClick={nextMonth} className="text-muted-foreground/60 hover:text-foreground transition-colors">
-              <ChevronRight className="h-3.5 w-3.5" />
-            </button>
-            {!isCurrentMonth && (
-              <button onClick={() => router.push('/')} className="text-xs text-primary ml-0.5">hoy</button>
-            )}
-          </div>
-
-          {/* Desktop */}
-          <div className="hidden sm:flex items-center gap-1">
-            <button onClick={prevMonth} className={navBtnClass} title="Mes anterior">
-              <ChevronLeft className="h-4 w-4" />
-            </button>
-            <select
-              value={selectedMonth}
-              onChange={e => changePeriod(selectedYear, parseInt(e.target.value))}
-              className={selectClass}
-            >
-              {MONTHS_LONG.map((name, i) => (
-                <option key={i + 1} value={i + 1}>{name.charAt(0).toUpperCase() + name.slice(1)}</option>
-              ))}
-            </select>
-            <select
-              value={selectedYear}
-              onChange={e => changePeriod(parseInt(e.target.value), selectedMonth)}
-              className={selectClass}
-            >
-              {years.map(y => <option key={y} value={y}>{y}</option>)}
-            </select>
-            <button onClick={nextMonth} className={navBtnClass} title="Mes siguiente">
-              <ChevronRight className="h-4 w-4" />
-            </button>
-            {!isCurrentMonth && (
-              <button
-                onClick={() => router.push('/')}
-                className="ml-1 rounded-lg border border-primary/30 bg-accent px-3 py-1.5 text-xs font-medium text-accent-foreground hover:bg-accent/80 transition-colors shadow-sm"
-              >
-                Hoy
+              <button onClick={nextMonth} className={navBtnClass} title="Mes siguiente">
+                <ChevronRight className="h-4 w-4" />
               </button>
-            )}
-          </div>
+              {!isCurrentMonth && (
+                <button
+                  onClick={() => router.push('/')}
+                  className="ml-1 rounded-lg border border-primary/30 bg-accent px-3 py-1.5 text-xs font-medium text-accent-foreground hover:bg-accent/80 transition-colors shadow-sm"
+                >
+                  Hoy
+                </button>
+              )}
+            </div>
+          )}
         </div>
       </div>
 

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { usePathname } from 'next/navigation'
 import { Menu, X } from 'lucide-react'
 import { Sidebar } from './Sidebar'
+import { useIsMobile } from '@/hooks/useIsMobile'
 import type { User } from '@supabase/supabase-js'
 import type { Database } from '@/types/database.types'
 
@@ -18,6 +19,7 @@ interface Props {
 export function DashboardShell({ user, profile, children }: Props) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const pathname = usePathname()
+  const isMobile = useIsMobile(1024)
 
   // Cerrar sidebar al navegar en móvil
   useEffect(() => { setSidebarOpen(false) }, [pathname])
@@ -32,9 +34,9 @@ export function DashboardShell({ user, profile, children }: Props) {
     <div className="flex h-screen overflow-hidden bg-background">
 
       {/* Overlay móvil */}
-      {sidebarOpen && (
+      {isMobile && sidebarOpen && (
         <div
-          className="fixed inset-0 z-40 bg-black/50 lg:hidden"
+          className="fixed inset-0 z-40 bg-black/50"
           onClick={() => setSidebarOpen(false)}
         />
       )}
@@ -51,7 +53,7 @@ export function DashboardShell({ user, profile, children }: Props) {
       <div className="flex flex-1 flex-col overflow-hidden">
 
         {/* Header móvil */}
-        <header className="flex h-14 items-center gap-3 border-b border-border bg-background px-4 lg:hidden">
+        {isMobile && <header className="flex h-14 items-center gap-3 border-b border-border bg-background px-4">
           <button
             onClick={() => setSidebarOpen(true)}
             className="rounded-lg p-1.5 text-muted-foreground hover:bg-secondary transition-colors"
@@ -60,7 +62,7 @@ export function DashboardShell({ user, profile, children }: Props) {
             <Menu className="h-5 w-5" />
           </button>
           <span className="text-sm font-bold text-foreground">MiMeta</span>
-        </header>
+        </header>}
 
         <main className="flex-1 overflow-y-auto">
           <div className="p-4 md:p-6">{children}</div>

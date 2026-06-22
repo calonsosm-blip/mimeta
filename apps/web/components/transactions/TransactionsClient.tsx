@@ -3,6 +3,7 @@
 import { useState, useMemo } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { TransactionModal } from './TransactionModal'
+import { useIsMobile } from '@/hooks/useIsMobile'
 
 interface Category {
   id: string
@@ -36,6 +37,7 @@ function fmt(n: number) {
 const MONTHS = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic']
 
 export function TransactionsClient({ transactions, categories, userId }: Props) {
+  const isMobile = useIsMobile()
   const [txList, setTxList] = useState(transactions)
   const [showModal, setShowModal] = useState(false)
   const [editing, setEditing] = useState<Transaction | null>(null)
@@ -152,7 +154,7 @@ export function TransactionsClient({ transactions, categories, userId }: Props) 
               <tr className="border-b border-border text-left text-xs font-medium text-muted-foreground uppercase tracking-wide">
                 <th className="px-2 py-3 sm:px-4">Fecha</th>
                 <th className="px-2 py-3 sm:px-4">Concepto</th>
-                <th className="hidden sm:table-cell px-4 py-3">Categoría</th>
+                {!isMobile && <th className="px-4 py-3">Categoría</th>}
                 <th className="px-2 py-3 sm:px-4 text-right">Monto</th>
                 <th className="px-2 py-3 sm:px-4"></th>
               </tr>
@@ -175,9 +177,11 @@ export function TransactionsClient({ transactions, categories, userId }: Props) 
                         <span className="font-medium text-foreground truncate">{tx.concept}</span>
                       </div>
                     </td>
-                    <td className="hidden sm:table-cell px-4 py-3 text-muted-foreground">
-                      {tx.categories?.name ?? <span className="text-gray-300">—</span>}
-                    </td>
+                    {!isMobile && (
+                      <td className="px-4 py-3 text-muted-foreground">
+                        {tx.categories?.name ?? <span className="text-gray-300">—</span>}
+                      </td>
+                    )}
                     <td className={`px-2 py-3 sm:px-4 text-right font-semibold text-xs sm:text-sm whitespace-nowrap ${
                       tx.type === 'income' ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-500 dark:text-slate-400'
                     }`}>
