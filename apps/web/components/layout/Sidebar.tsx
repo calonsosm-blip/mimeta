@@ -65,12 +65,21 @@ export function Sidebar({ user, profile, isOpen = false, onClose }: SidebarProps
   const { theme, setTheme } = useTheme()
   const [mounted, setMounted] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
+  const [accent, setAccent] = useState('')
   const menuRef = useRef<HTMLDivElement>(null)
   const isPremium   = profile?.plan === 'premium'
   const displayName = profile?.display_name ?? user.email ?? ''
   const supabase    = createClient()
 
-  useEffect(() => { setMounted(true) }, [])
+  useEffect(() => {
+    setMounted(true)
+    setAccent(document.documentElement.dataset.accent ?? '')
+    const observer = new MutationObserver(() => {
+      setAccent(document.documentElement.dataset.accent ?? '')
+    })
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-accent'] })
+    return () => observer.disconnect()
+  }, [])
 
   // Cerrar el menú al hacer clic fuera
   useEffect(() => {
@@ -98,7 +107,10 @@ export function Sidebar({ user, profile, isOpen = false, onClose }: SidebarProps
 
       {/* Logo */}
       <div className="flex h-16 items-center justify-between px-4 border-b border-sidebar-border">
-        <Image src="/mimeta-horizontal.png" alt="MiMeta" height={52} width={125} className="object-contain object-left shrink-0" />
+        {accent === 'pride'
+          ? <span className="text-xl font-extrabold tracking-tight rainbow-text">MiMeta</span>
+          : <Image src="/mimeta-horizontal.png" alt="MiMeta" height={52} width={125} className="object-contain object-left shrink-0" />
+        }
         {isPremium && (
           <span className="shrink-0 rounded-full bg-accent px-2 py-0.5 text-xs font-medium text-accent-foreground">
             {profile?.plan_type ?? 'pro'}
