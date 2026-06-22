@@ -69,62 +69,15 @@ export function DashboardClient({
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
-        <div className="flex items-center gap-3">
+      <div className="flex items-start justify-between gap-4">
+        {/* Izquierda: título + subtítulo + ojo */}
+        <div className="flex items-center gap-2">
           <div>
             <h1 className="text-xl sm:text-2xl font-bold text-foreground">Hola, {firstName} 👋</h1>
-
-            {/* Subtítulo en desktop */}
             <p className="hidden sm:block text-sm text-muted-foreground mt-0.5">
               {isCurrentMonth ? 'Resumen del mes actual' : 'Resumen del período seleccionado'}
             </p>
-
-            {/* Selector sutil en móvil */}
-            <div className="flex items-center gap-1 mt-0.5 sm:hidden">
-              <button onClick={prevMonth} className="text-muted-foreground/60 hover:text-foreground transition-colors">
-                <ChevronLeft className="h-3.5 w-3.5" />
-              </button>
-
-              <div className="relative">
-                <span className="text-sm text-muted-foreground cursor-pointer">
-                  {MONTHS_LONG[selectedMonth - 1].charAt(0).toUpperCase() + MONTHS_LONG[selectedMonth - 1].slice(1)}
-                </span>
-                <select
-                  value={selectedMonth}
-                  onChange={e => changePeriod(selectedYear, parseInt(e.target.value))}
-                  className="absolute inset-0 opacity-0 cursor-pointer w-full"
-                >
-                  {MONTHS_LONG.map((name, i) => (
-                    <option key={i + 1} value={i + 1}>{name.charAt(0).toUpperCase() + name.slice(1)}</option>
-                  ))}
-                </select>
-              </div>
-
-              <span className="text-muted-foreground/40 text-xs">·</span>
-
-              <div className="relative">
-                <span className="text-sm text-muted-foreground cursor-pointer">{selectedYear}</span>
-                <select
-                  value={selectedYear}
-                  onChange={e => changePeriod(parseInt(e.target.value), selectedMonth)}
-                  className="absolute inset-0 opacity-0 cursor-pointer w-full"
-                >
-                  {years.map(y => <option key={y} value={y}>{y}</option>)}
-                </select>
-              </div>
-
-              <button onClick={nextMonth} className="text-muted-foreground/60 hover:text-foreground transition-colors">
-                <ChevronRight className="h-3.5 w-3.5" />
-              </button>
-
-              {!isCurrentMonth && (
-                <button onClick={() => router.push('/')} className="text-xs text-primary ml-0.5">
-                  hoy
-                </button>
-              )}
-            </div>
           </div>
-
           <button
             onClick={() => setInvisible(v => !v)}
             className="flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
@@ -134,44 +87,79 @@ export function DashboardClient({
           </button>
         </div>
 
-        {/* Navegación de período — solo desktop */}
-        <div className="hidden sm:flex items-center gap-1 shrink-0">
-          <button onClick={prevMonth} className={navBtnClass} title="Mes anterior">
-            <ChevronLeft className="h-4 w-4" />
-          </button>
-
-          <select
-            value={selectedMonth}
-            onChange={e => changePeriod(selectedYear, parseInt(e.target.value))}
-            className={selectClass}
-          >
-            {MONTHS_LONG.map((name, i) => (
-              <option key={i + 1} value={i + 1}>
-                {name.charAt(0).toUpperCase() + name.slice(1)}
-              </option>
-            ))}
-          </select>
-
-          <select
-            value={selectedYear}
-            onChange={e => changePeriod(parseInt(e.target.value), selectedMonth)}
-            className={selectClass}
-          >
-            {years.map(y => <option key={y} value={y}>{y}</option>)}
-          </select>
-
-          <button onClick={nextMonth} className={navBtnClass} title="Mes siguiente">
-            <ChevronRight className="h-4 w-4" />
-          </button>
-
-          {!isCurrentMonth && (
-            <button
-              onClick={() => router.push('/')}
-              className="ml-1 rounded-lg border border-primary/30 bg-accent px-3 py-1.5 text-xs font-medium text-accent-foreground hover:bg-accent/80 transition-colors shadow-sm"
-            >
-              Hoy
+        {/* Derecha: selector sutil móvil / controles desktop */}
+        <div className="shrink-0">
+          {/* Móvil */}
+          <div className="flex items-center gap-1 sm:hidden mt-1">
+            <button onClick={prevMonth} className="text-muted-foreground/60 hover:text-foreground transition-colors">
+              <ChevronLeft className="h-3.5 w-3.5" />
             </button>
-          )}
+            <div className="relative">
+              <span className="text-sm text-muted-foreground cursor-pointer">
+                {MONTHS_LONG[selectedMonth - 1].charAt(0).toUpperCase() + MONTHS_LONG[selectedMonth - 1].slice(1)}
+              </span>
+              <select
+                value={selectedMonth}
+                onChange={e => changePeriod(selectedYear, parseInt(e.target.value))}
+                className="absolute inset-0 opacity-0 cursor-pointer w-full"
+              >
+                {MONTHS_LONG.map((name, i) => (
+                  <option key={i + 1} value={i + 1}>{name.charAt(0).toUpperCase() + name.slice(1)}</option>
+                ))}
+              </select>
+            </div>
+            <span className="text-muted-foreground/40 text-xs">·</span>
+            <div className="relative">
+              <span className="text-sm text-muted-foreground cursor-pointer">{selectedYear}</span>
+              <select
+                value={selectedYear}
+                onChange={e => changePeriod(parseInt(e.target.value), selectedMonth)}
+                className="absolute inset-0 opacity-0 cursor-pointer w-full"
+              >
+                {years.map(y => <option key={y} value={y}>{y}</option>)}
+              </select>
+            </div>
+            <button onClick={nextMonth} className="text-muted-foreground/60 hover:text-foreground transition-colors">
+              <ChevronRight className="h-3.5 w-3.5" />
+            </button>
+            {!isCurrentMonth && (
+              <button onClick={() => router.push('/')} className="text-xs text-primary ml-0.5">hoy</button>
+            )}
+          </div>
+
+          {/* Desktop */}
+          <div className="hidden sm:flex items-center gap-1">
+            <button onClick={prevMonth} className={navBtnClass} title="Mes anterior">
+              <ChevronLeft className="h-4 w-4" />
+            </button>
+            <select
+              value={selectedMonth}
+              onChange={e => changePeriod(selectedYear, parseInt(e.target.value))}
+              className={selectClass}
+            >
+              {MONTHS_LONG.map((name, i) => (
+                <option key={i + 1} value={i + 1}>{name.charAt(0).toUpperCase() + name.slice(1)}</option>
+              ))}
+            </select>
+            <select
+              value={selectedYear}
+              onChange={e => changePeriod(parseInt(e.target.value), selectedMonth)}
+              className={selectClass}
+            >
+              {years.map(y => <option key={y} value={y}>{y}</option>)}
+            </select>
+            <button onClick={nextMonth} className={navBtnClass} title="Mes siguiente">
+              <ChevronRight className="h-4 w-4" />
+            </button>
+            {!isCurrentMonth && (
+              <button
+                onClick={() => router.push('/')}
+                className="ml-1 rounded-lg border border-primary/30 bg-accent px-3 py-1.5 text-xs font-medium text-accent-foreground hover:bg-accent/80 transition-colors shadow-sm"
+              >
+                Hoy
+              </button>
+            )}
+          </div>
         </div>
       </div>
 
