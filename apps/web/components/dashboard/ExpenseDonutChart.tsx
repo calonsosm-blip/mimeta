@@ -54,9 +54,9 @@ export function ExpenseDonutChart({ data, invisible = false }: Props) {
         </div>
       </div>
 
-      <div className="flex gap-6 items-center">
+      <div className="flex flex-col sm:flex-row gap-6 items-start sm:items-center">
         {/* Donut */}
-        <div className="relative shrink-0 w-40 h-40">
+        <div className="relative shrink-0 w-32 h-32 sm:w-40 sm:h-40 mx-auto sm:mx-0">
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
               <Pie

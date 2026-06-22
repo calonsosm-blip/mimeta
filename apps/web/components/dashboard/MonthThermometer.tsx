@@ -71,7 +71,7 @@ export function MonthThermometer({ expenses, income, budget, today, daysInMonth,
       </div>
 
       {/* Cifras */}
-      <div className="grid grid-cols-2 gap-3 text-sm">
+      <div className="grid grid-cols-2 sm:grid-cols-2 gap-3 text-sm">
         <div>
           <p className="text-xs text-muted-foreground">Gastado</p>
           <p className="font-semibold text-foreground">S/ {invisible ? '••••' : fmt(expenses)}</p>

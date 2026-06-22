@@ -116,7 +116,7 @@ export function DebtsClient({ debts: initial, userId }: Props) {
   return (
     <div className="space-y-6 max-w-3xl">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-foreground">Deudas</h1>
+        <h1 className="text-xl sm:text-2xl font-bold text-foreground">Deudas</h1>
         <button
           onClick={openNew}
           className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
@@ -127,7 +127,7 @@ export function DebtsClient({ debts: initial, userId }: Props) {
 
       {/* Resumen */}
       {activeDebts.length > 0 && (
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="rounded-xl border border-border bg-card p-4">
             <p className="text-xs text-muted-foreground">Deuda total activa</p>
             <p className="mt-1 text-xl font-bold text-foreground">S/ {fmt(totalDebt)}</p>
@@ -179,7 +179,7 @@ export function DebtsClient({ debts: initial, userId }: Props) {
               </div>
 
               {/* Cifras */}
-              <div className="grid grid-cols-3 gap-3 text-sm">
+              <div className="grid grid-cols-3 sm:grid-cols-3 gap-2 sm:gap-3 text-sm">
                 <div>
                   <p className="text-xs text-muted-foreground">Saldo pendiente</p>
                   <p className={`font-semibold ${isOverdue ? 'text-red-600 dark:text-red-400' : 'text-foreground'}`}>S/ {fmt(debt.current_balance)}</p>
@@ -206,7 +206,7 @@ export function DebtsClient({ debts: initial, userId }: Props) {
                     value={payAmount}
                     onChange={e => setPayAmount(e.target.value)}
                     placeholder={fmt(debt.monthly_payment)}
-                    className="w-28 rounded border border-border bg-background px-2 py-1 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+                    className="w-20 sm:w-28 rounded border border-border bg-background px-2 py-1 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
                   />
                   <button
                     onClick={() => registerPayment(debt)}

@@ -96,7 +96,7 @@ export function TransactionsClient({ transactions, categories, userId }: Props) 
     <div className="space-y-4">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-foreground">Transacciones</h1>
+        <h1 className="text-xl sm:text-2xl font-bold text-foreground">Transacciones</h1>
         <button
           onClick={openNew}
           className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary/90 transition-colors"
@@ -138,7 +138,7 @@ export function TransactionsClient({ transactions, categories, userId }: Props) 
       </div>
 
       {/* Tabla */}
-      <div className="rounded-xl border border-border bg-card shadow-sm overflow-hidden">
+      <div className="rounded-xl border border-border bg-card shadow-sm overflow-x-auto">
         {filtered.length === 0 ? (
           <div className="py-16 text-center">
             <p className="text-muted-foreground text-sm">No hay transacciones.</p>
@@ -150,11 +150,11 @@ export function TransactionsClient({ transactions, categories, userId }: Props) 
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-border text-left text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                <th className="px-4 py-3">Fecha</th>
-                <th className="px-4 py-3">Concepto</th>
-                <th className="px-4 py-3">Categoría</th>
-                <th className="px-4 py-3 text-right">Monto</th>
-                <th className="px-4 py-3"></th>
+                <th className="px-2 py-3 sm:px-4">Fecha</th>
+                <th className="px-2 py-3 sm:px-4">Concepto</th>
+                <th className="hidden sm:table-cell px-4 py-3">Categoría</th>
+                <th className="px-2 py-3 sm:px-4 text-right">Monto</th>
+                <th className="px-2 py-3 sm:px-4"></th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
@@ -162,23 +162,23 @@ export function TransactionsClient({ transactions, categories, userId }: Props) 
                 const d = new Date(tx.date + 'T12:00:00')
                 return (
                   <tr key={tx.id} className="hover:bg-muted transition-colors">
-                    <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">
+                    <td className="px-2 py-3 sm:px-4 text-muted-foreground whitespace-nowrap text-xs sm:text-sm">
                       {d.getDate()} {MONTHS[d.getMonth()]}
                     </td>
-                    <td className="px-4 py-3">
+                    <td className="px-2 py-3 sm:px-4 max-w-[140px] sm:max-w-none">
                       <div className="flex items-center gap-2">
-                        <span className={`inline-flex h-6 w-6 items-center justify-center rounded-full text-xs ${
+                        <span className={`shrink-0 inline-flex h-6 w-6 items-center justify-center rounded-full text-xs ${
                           tx.type === 'income' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' : 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400'
                         }`}>
                           {tx.type === 'income' ? '↑' : '↓'}
                         </span>
-                        <span className="font-medium text-foreground">{tx.concept}</span>
+                        <span className="font-medium text-foreground truncate">{tx.concept}</span>
                       </div>
                     </td>
-                    <td className="px-4 py-3 text-muted-foreground">
+                    <td className="hidden sm:table-cell px-4 py-3 text-muted-foreground">
                       {tx.categories?.name ?? <span className="text-gray-300">—</span>}
                     </td>
-                    <td className={`px-4 py-3 text-right font-semibold ${
+                    <td className={`px-2 py-3 sm:px-4 text-right font-semibold text-xs sm:text-sm whitespace-nowrap ${
                       tx.type === 'income' ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-500 dark:text-slate-400'
                     }`}>
                       {tx.type === 'income' ? '+' : '-'} S/ {fmt(tx.amount_pen)}
@@ -186,7 +186,7 @@ export function TransactionsClient({ transactions, categories, userId }: Props) 
                         <span className="ml-1 text-xs text-muted-foreground">(${fmt(tx.amount)})</span>
                       )}
                     </td>
-                    <td className="px-4 py-3">
+                    <td className="px-2 py-3 sm:px-4">
                       <div className="flex items-center gap-1">
                         <button
                           onClick={() => openEdit(tx)}

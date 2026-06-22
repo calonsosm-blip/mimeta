@@ -73,10 +73,10 @@ export function DashboardClient({
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-start justify-between gap-4">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
         <div className="flex items-center gap-3">
           <div>
-            <h1 className="text-2xl font-bold text-foreground">Hola, {firstName} 👋</h1>
+            <h1 className="text-xl sm:text-2xl font-bold text-foreground">Hola, {firstName} 👋</h1>
             <p className="text-sm text-muted-foreground mt-0.5">
               {isCurrentMonth ? 'Resumen del mes actual' : 'Resumen del período seleccionado'}
             </p>
@@ -94,7 +94,7 @@ export function DashboardClient({
         </div>
 
         {/* Navegación de período */}
-        <div className="flex items-center gap-1 flex-shrink-0">
+        <div className="flex flex-wrap items-center gap-1 sm:flex-nowrap sm:shrink-0">
           <button onClick={prevMonth} className={navBtnClass} title="Mes anterior">
             <ChevronLeft className="h-4 w-4" />
           </button>
