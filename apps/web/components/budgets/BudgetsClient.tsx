@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { CategoryPanel } from './CategoryPanel'
+import { ArrowLeft, Bookmark, ClipboardList, Settings2, Trash2 } from 'lucide-react'
 
 interface Category { id: string; name: string; type: string; sort_order: number }
 interface BudgetRow {
@@ -35,14 +36,6 @@ function fmt(n: number) {
   return new Intl.NumberFormat('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n)
 }
 
-function IconSettings() {
-  return (
-    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-    </svg>
-  )
-}
 
 export function BudgetsClient({
   budgets: initialBudgets, allCategories, actualByCategory,
@@ -324,24 +317,27 @@ export function BudgetsClient({
       </div>
 
       {/* Header fila 2: acciones */}
-      <div className="flex items-center gap-2 flex-wrap">
+      <div className="flex items-center gap-1 sm:gap-2">
         {/* Copiar mes anterior */}
         <button
           onClick={copyPreviousMonth}
           disabled={copyingPrev}
-          className="rounded-lg border border-border bg-card px-3 py-2 text-sm text-muted-foreground hover:bg-muted transition-colors shadow-sm disabled:opacity-50"
+          title="Copiar mes anterior"
+          className="flex h-9 w-9 sm:w-auto sm:px-3 items-center justify-center sm:gap-1.5 rounded-lg border border-border bg-card text-sm text-muted-foreground hover:bg-muted transition-colors shadow-sm disabled:opacity-50"
         >
-          {copyingPrev ? 'Copiando...' : '↩ Mes anterior'}
+          <ArrowLeft className="h-4 w-4 shrink-0" />
+          <span className="hidden sm:inline">{copyingPrev ? 'Copiando...' : 'Mes anterior'}</span>
         </button>
 
         {/* Limpiar mes */}
         {budgets.length > 0 && (
           <button
             onClick={clearAllCategories}
-            className="rounded-lg border border-red-100 bg-card px-3 py-2 text-sm text-red-400 hover:bg-red-50 hover:border-red-200 hover:text-red-500 transition-colors shadow-sm"
-            title="Quitar todas las categorías de este mes"
+            title="Limpiar mes"
+            className="flex h-9 w-9 sm:w-auto sm:px-3 items-center justify-center sm:gap-1.5 rounded-lg border border-red-100 bg-card text-sm text-red-400 hover:bg-red-50 hover:border-red-200 hover:text-red-500 transition-colors shadow-sm"
           >
-            🗑 Limpiar mes
+            <Trash2 className="h-4 w-4 shrink-0" />
+            <span className="hidden sm:inline">Limpiar mes</span>
           </button>
         )}
 
@@ -350,18 +346,20 @@ export function BudgetsClient({
           <div className="flex rounded-lg border border-border bg-card shadow-sm overflow-hidden">
             <button
               onClick={() => setShowTemplateModal(true)}
-              className="px-3 py-2 text-sm text-muted-foreground hover:bg-muted transition-colors border-r border-border"
               title="Guardar como plantilla"
+              className="flex h-9 w-9 sm:w-auto sm:px-3 items-center justify-center sm:gap-1.5 text-sm text-muted-foreground hover:bg-muted transition-colors border-r border-border"
             >
-              💾 Guardar plantilla
+              <Bookmark className="h-4 w-4 shrink-0" />
+              <span className="hidden sm:inline">Guardar plantilla</span>
             </button>
             <button
               onClick={() => setShowApplyMenu(v => !v)}
               disabled={templates.length === 0 || applyingTemplate}
-              className="px-3 py-2 text-sm text-muted-foreground hover:bg-muted transition-colors disabled:opacity-40"
               title="Aplicar plantilla"
+              className="flex h-9 w-9 sm:w-auto sm:px-3 items-center justify-center sm:gap-1.5 text-sm text-muted-foreground hover:bg-muted transition-colors disabled:opacity-40"
             >
-              {applyingTemplate ? 'Aplicando...' : '📋 Aplicar'}
+              <ClipboardList className="h-4 w-4 shrink-0" />
+              <span className="hidden sm:inline">{applyingTemplate ? 'Aplicando...' : 'Aplicar'}</span>
             </button>
           </div>
 
@@ -400,23 +398,23 @@ export function BudgetsClient({
         <button
           onClick={() => setShowCatPanel(true)}
           title="Gestionar categorías"
-          className="flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-2 text-sm text-muted-foreground hover:bg-accent hover:text-primary hover:border-accent transition-colors shadow-sm"
+          className="flex h-9 w-9 sm:w-auto sm:px-3 items-center justify-center sm:gap-1.5 rounded-lg border border-border bg-card text-sm text-muted-foreground hover:bg-accent hover:text-primary hover:border-accent transition-colors shadow-sm"
         >
-          <IconSettings />
-          <span>Categorías</span>
+          <Settings2 className="h-4 w-4 shrink-0" />
+          <span className="hidden sm:inline">Categorías</span>
         </button>
       </div>
 
       {/* Totales */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+      <div className="grid grid-cols-3 gap-2 sm:gap-4">
         {[
-          { label: 'Presupuesto total', value: totalBudget, color: 'text-foreground' },
+          { label: 'Presupuesto', value: totalBudget, color: 'text-foreground' },
           { label: 'Gasto real', value: totalActual, color: 'text-red-500' },
           { label: 'Disponible', value: totalBudget - totalActual, color: totalBudget - totalActual >= 0 ? 'text-emerald-600' : 'text-red-600' },
         ].map(card => (
-          <div key={card.label} className="rounded-xl border border-border bg-card p-4 shadow-sm">
-            <p className="text-xs text-muted-foreground">{card.label}</p>
-            <p className={`mt-1 text-xl font-bold ${card.color}`}>S/ {fmt(card.value)}</p>
+          <div key={card.label} className="rounded-xl border border-border bg-card p-3 sm:p-4 shadow-sm">
+            <p className="text-xs text-muted-foreground truncate">{card.label}</p>
+            <p className={`mt-1 text-base sm:text-xl font-bold truncate ${card.color}`}>S/ {fmt(card.value)}</p>
           </div>
         ))}
       </div>
