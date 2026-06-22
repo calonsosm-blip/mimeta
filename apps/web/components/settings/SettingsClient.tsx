@@ -5,7 +5,7 @@ import { useTheme } from 'next-themes'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { setAccentTheme, getAccentTheme } from '@/components/providers/ThemeProvider'
-import { Sun, Moon, LogOut } from 'lucide-react'
+import { Sun, Moon, LogOut, Crown } from 'lucide-react'
 
 interface Category {
   id: string
@@ -195,9 +195,7 @@ export function SettingsClient({ profile, categories, userId }: Props) {
                   <span className="h-3.5 w-3.5 rounded-full shrink-0" style={{ backgroundColor: opt.color }} />
                   {opt.label}
                   {opt.badge && (
-                    <span className="ml-auto text-[10px] font-bold rounded-full px-1.5 py-0.5 bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400">
-                      {opt.badge}
-                    </span>
+                    <Crown className="ml-auto h-3.5 w-3.5 text-amber-400 shrink-0" />
                   )}
                 </button>
               ))}
