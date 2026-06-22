@@ -1,7 +1,10 @@
 {
   "onlyBuiltDependencies": [
     "@next/swc-win32-x64-msvc",
+    "@next/swc-linux-x64-gnu",
+    "@next/swc-linux-x64-musl",
     "sharp",
-    "unrs-resolver"
+    "unrs-resolver",
+    "core-js"
   ]
 }
