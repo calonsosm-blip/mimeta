@@ -1,7 +1,7 @@
 packages:
   - 'apps/*'
 
-onlyBuiltDependencies:
-  - core-js
-  - sharp
-  - unrs-resolver
+allowBuilds:
+  sharp: true
+  unrs-resolver: true
+  core-js: false
