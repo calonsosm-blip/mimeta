@@ -44,6 +44,12 @@ export function ExpenseDonutChart({ data, invisible = false }: Props) {
   const othersPercent = total > 0 ? (othersValue / total) * 100 : 0
   const hasOthers     = othersData.length > 0
 
+  // En móvil el donut usa los mismos datos que la leyenda
+  const donutData = hasOthers
+    ? [...visibleData, { name: `Otros (${othersData.length})`, value: othersValue, percent: othersPercent }]
+    : chartData
+  const DONUT_COLORS = hasOthers ? [...COLORS.slice(0, TOP_N), '#94a3b8'] : COLORS
+
   return (
     <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
       <div className="flex items-center justify-between mb-5">
@@ -70,7 +76,7 @@ export function ExpenseDonutChart({ data, invisible = false }: Props) {
           <ResponsiveContainer width="100%" height="100%">
             <PieChart margin={{ top: 4, right: 4, bottom: 4, left: 4 }}>
               <Pie
-                data={chartData}
+                data={donutData}
                 cx="50%"
                 cy="50%"
                 innerRadius={isMobile ? 42 : 52}
@@ -79,8 +85,8 @@ export function ExpenseDonutChart({ data, invisible = false }: Props) {
                 dataKey="value"
                 strokeWidth={0}
               >
-                {chartData.map((_, i) => (
-                  <Cell key={i} fill={COLORS[i % COLORS.length]} />
+                {donutData.map((_, i) => (
+                  <Cell key={i} fill={DONUT_COLORS[i % DONUT_COLORS.length]} />
                 ))}
               </Pie>
               <Tooltip
