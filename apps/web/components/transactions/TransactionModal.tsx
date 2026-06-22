@@ -1,7 +1,8 @@
-﻿'use client'
+'use client'
 
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import { Loader2 } from 'lucide-react'
 
 interface Category {
   id: string
@@ -26,40 +27,95 @@ interface Props {
   transaction: Transaction | null
   categories: Category[]
   userId: string
+  baseCurrency: 'PEN' | 'USD'
   onSaved: (tx: Transaction, isNew: boolean) => void
   onDeleted: (id: string) => void
   onClose: () => void
 }
 
-const EXCHANGE_RATE = 3.75
+// Moneda "contraria" según la base
+function foreignOf(base: 'PEN' | 'USD'): 'PEN' | 'USD' {
+  return base === 'PEN' ? 'USD' : 'PEN'
+}
 
-export function TransactionModal({ transaction, categories, userId, onSaved, onDeleted, onClose }: Props) {
+export function TransactionModal({ transaction, categories, userId, baseCurrency, onSaved, onDeleted, onClose }: Props) {
   const supabase = createClient()
   const isNew = !transaction
 
-  const [type, setType] = useState<'income' | 'expense'>(
-    (transaction?.type as 'income' | 'expense') ?? 'expense'
-  )
-  const [date, setDate] = useState(transaction?.date ?? new Date().toISOString().slice(0, 10))
+  const [type, setType]       = useState<'income' | 'expense'>((transaction?.type as 'income' | 'expense') ?? 'expense')
+  const [date, setDate]       = useState(transaction?.date ?? new Date().toISOString().slice(0, 10))
   const [concept, setConcept] = useState(transaction?.concept ?? '')
-  const [amount, setAmount] = useState(transaction?.amount?.toString() ?? '')
+  const [amount, setAmount]   = useState(transaction?.amount?.toString() ?? '')
   const [currency, setCurrency] = useState<'PEN' | 'USD'>(
-    (transaction?.currency as 'PEN' | 'USD') ?? 'PEN'
+    (transaction?.currency as 'PEN' | 'USD') ?? baseCurrency
   )
   const [categoryId, setCategoryId] = useState(transaction?.categories?.id ?? '')
-  const [notes, setNotes] = useState(transaction?.notes ?? '')
+  const [notes, setNotes]     = useState(transaction?.notes ?? '')
   const [loading, setLoading] = useState(false)
   const [deleting, setDeleting] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  // null = sin presupuesto para ese mes → mostrar todas
+  const [error, setError]     = useState<string | null>(null)
   const [budgetCatIds, setBudgetCatIds] = useState<string[] | null>(null)
-  const [loadingCats, setLoadingCats] = useState(false)
+  const [loadingCats, setLoadingCats]   = useState(false)
 
-  const amountPen = currency === 'USD'
-    ? (parseFloat(amount) || 0) * EXCHANGE_RATE
-    : (parseFloat(amount) || 0)
+  // Tipo de cambio
+  const needsConversion = currency !== 'PEN'   // amount_pen siempre en PEN
+  const [rateMode, setRateMode]     = useState<'auto' | 'manual'>('auto')
+  const [exchangeRate, setExchangeRate] = useState<string>('')
+  const [loadingRate, setLoadingRate]   = useState(false)
+  const [rateNotFound, setRateNotFound] = useState(false)
 
-  // Categorías filtradas: por tipo y, para egresos, por las del presupuesto del mes
+  // Si estamos editando una transacción en USD, derivar el TC original
+  useEffect(() => {
+    if (!isNew && transaction?.currency === 'USD' && transaction.amount > 0) {
+      const derived = (transaction.amount_pen / transaction.amount).toFixed(4)
+      setExchangeRate(derived)
+      setRateMode('manual')
+    }
+  }, [])
+
+  // Consultar tipo de cambio automático cuando cambia fecha o moneda
+  useEffect(() => {
+    if (!needsConversion || rateMode !== 'auto') return
+    if (!date) return
+
+    setLoadingRate(true)
+    setRateNotFound(false)
+
+    supabase
+      .from('exchange_rates')
+      .select('usd_to_pen')
+      .eq('date', date)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data?.usd_to_pen) {
+          setExchangeRate(data.usd_to_pen.toString())
+          setRateNotFound(false)
+        } else {
+          setExchangeRate('')
+          setRateNotFound(true)
+        }
+        setLoadingRate(false)
+      })
+  }, [date, needsConversion, rateMode])
+
+  // Resetear TC al cambiar moneda
+  useEffect(() => {
+    if (!needsConversion) {
+      setExchangeRate('')
+      setRateNotFound(false)
+    } else if (rateMode === 'auto') {
+      setExchangeRate('')
+    }
+  }, [currency])
+
+  // amount_pen: siempre en PEN
+  const rate      = parseFloat(exchangeRate) || 0
+  const amountNum = parseFloat(amount) || 0
+  const amountPen = needsConversion
+    ? amountNum * rate
+    : amountNum
+
+  // Categorías filtradas
   const filteredCats = categories.filter(c => {
     if (c.type !== type) return false
     if (type === 'expense' && budgetCatIds !== null) {
@@ -68,7 +124,6 @@ export function TransactionModal({ transaction, categories, userId, onSaved, onD
     return true
   })
 
-  // Reset category when type changes
   useEffect(() => {
     if (categoryId) {
       const cat = categories.find(c => c.id === categoryId)
@@ -76,12 +131,8 @@ export function TransactionModal({ transaction, categories, userId, onSaved, onD
     }
   }, [type])
 
-  // Cargar categorías del presupuesto según el mes de la fecha seleccionada
   useEffect(() => {
-    if (!date || type !== 'expense') {
-      setBudgetCatIds(null)
-      return
-    }
+    if (!date || type !== 'expense') { setBudgetCatIds(null); return }
     const [y, m] = date.split('-')
     setLoadingCats(true)
     supabase
@@ -103,7 +154,8 @@ export function TransactionModal({ transaction, categories, userId, onSaved, onD
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setError(null)
-    if (!concept.trim() || !amount || parseFloat(amount) <= 0) {
+
+    if (!concept.trim() || !amount || amountNum <= 0) {
       setError('Completa concepto y monto.')
       return
     }
@@ -111,6 +163,11 @@ export function TransactionModal({ transaction, categories, userId, onSaved, onD
       setError('Selecciona una categoría.')
       return
     }
+    if (needsConversion && (!exchangeRate || rate <= 0)) {
+      setError('Ingresa el tipo de cambio.')
+      return
+    }
+
     setLoading(true)
 
     const payload = {
@@ -118,7 +175,7 @@ export function TransactionModal({ transaction, categories, userId, onSaved, onD
       date,
       type,
       concept: concept.trim(),
-      amount: parseFloat(amount),
+      amount: amountNum,
       currency,
       amount_pen: parseFloat(amountPen.toFixed(2)),
       category_id: categoryId || null,
@@ -154,15 +211,18 @@ export function TransactionModal({ transaction, categories, userId, onSaved, onD
     onDeleted(transaction!.id)
   }
 
+  const inputClass = 'w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring'
+  const currSymbol = (c: 'PEN' | 'USD') => c === 'PEN' ? 'S/' : '$'
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
-      <div className="w-full max-w-md rounded-2xl bg-card shadow-xl">
+      <div className="w-full max-w-md rounded-2xl bg-card shadow-xl max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <div className="flex items-center justify-between border-b border-border px-6 py-4">
           <h2 className="text-base font-semibold text-foreground">
             {isNew ? 'Nueva transacción' : 'Editar transacción'}
           </h2>
-          <button onClick={onClose} className="text-muted-foreground hover:text-muted-foreground text-xl leading-none">×</button>
+          <button onClick={onClose} className="text-muted-foreground hover:text-foreground text-xl leading-none">×</button>
         </div>
 
         <form onSubmit={handleSubmit} className="px-6 py-5 space-y-4">
@@ -175,9 +235,7 @@ export function TransactionModal({ transaction, categories, userId, onSaved, onD
                 onClick={() => setType(t)}
                 className={`flex-1 py-2 text-sm font-medium transition-colors ${
                   type === t
-                    ? t === 'income'
-                      ? 'bg-emerald-500 text-white'
-                      : 'bg-red-500 text-white'
+                    ? t === 'income' ? 'bg-emerald-500 text-white' : 'bg-red-500 text-white'
                     : 'bg-card text-muted-foreground hover:bg-muted'
                 }`}
               >
@@ -194,7 +252,7 @@ export function TransactionModal({ transaction, categories, userId, onSaved, onD
               value={date}
               onChange={e => setDate(e.target.value)}
               required
-              className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+              className={inputClass}
             />
           </div>
 
@@ -207,7 +265,7 @@ export function TransactionModal({ transaction, categories, userId, onSaved, onD
               onChange={e => setConcept(e.target.value)}
               placeholder="Ej: Mercado, Sueldo..."
               required
-              className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+              className={inputClass}
             />
           </div>
 
@@ -223,7 +281,7 @@ export function TransactionModal({ transaction, categories, userId, onSaved, onD
                 min="0.01"
                 step="0.01"
                 required
-                className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                className={inputClass}
               />
             </div>
             <div>
@@ -231,7 +289,7 @@ export function TransactionModal({ transaction, categories, userId, onSaved, onD
               <select
                 value={currency}
                 onChange={e => setCurrency(e.target.value as 'PEN' | 'USD')}
-                className="rounded-lg border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring h-[38px]"
+                className="rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring h-[38px]"
               >
                 <option value="PEN">S/ PEN</option>
                 <option value="USD">$ USD</option>
@@ -239,10 +297,68 @@ export function TransactionModal({ transaction, categories, userId, onSaved, onD
             </div>
           </div>
 
-          {currency === 'USD' && parseFloat(amount) > 0 && (
-            <p className="text-xs text-muted-foreground -mt-2">
-              ≈ S/ {amountPen.toFixed(2)} (T.C. {EXCHANGE_RATE})
-            </p>
+          {/* Bloque de tipo de cambio — solo cuando la moneda no es PEN */}
+          {needsConversion && (
+            <div className="rounded-xl border border-border bg-muted/40 px-4 py-3 space-y-2.5">
+              <div className="flex items-center justify-between">
+                <p className="text-xs font-semibold text-foreground">Tipo de cambio</p>
+                <div className="flex rounded-lg border border-border overflow-hidden text-xs">
+                  <button
+                    type="button"
+                    onClick={() => setRateMode('auto')}
+                    className={`px-3 py-1 transition-colors ${rateMode === 'auto' ? 'bg-primary text-primary-foreground font-medium' : 'bg-card text-muted-foreground hover:bg-muted'}`}
+                  >
+                    Automático
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setRateMode('manual')}
+                    className={`px-3 py-1 transition-colors ${rateMode === 'manual' ? 'bg-primary text-primary-foreground font-medium' : 'bg-card text-muted-foreground hover:bg-muted'}`}
+                  >
+                    Manual
+                  </button>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <div className="flex-1 relative">
+                  <input
+                    type="number"
+                    value={exchangeRate}
+                    onChange={e => setExchangeRate(e.target.value)}
+                    disabled={rateMode === 'auto' && !rateNotFound}
+                    placeholder="0.00"
+                    min="0.001"
+                    step="0.0001"
+                    className={`w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-60 disabled:cursor-not-allowed`}
+                  />
+                  {loadingRate && (
+                    <Loader2 className="absolute right-2.5 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-muted-foreground" />
+                  )}
+                </div>
+                <span className="text-xs text-muted-foreground whitespace-nowrap">S/ por USD</span>
+              </div>
+
+              {rateMode === 'auto' && rateNotFound && (
+                <p className="text-xs text-amber-600 dark:text-amber-400">
+                  No hay tipo de cambio registrado para esta fecha. Puedes ingresarlo manualmente.
+                </p>
+              )}
+              {rateMode === 'auto' && !rateNotFound && exchangeRate && (
+                <p className="text-xs text-muted-foreground">
+                  TC obtenido de la tabla de tipos de cambio del sistema.
+                </p>
+              )}
+
+              {amountNum > 0 && rate > 0 && (
+                <div className="flex items-center justify-between rounded-lg bg-primary/8 px-3 py-2">
+                  <span className="text-xs text-muted-foreground">Equivalente en PEN</span>
+                  <span className="text-sm font-semibold text-foreground">
+                    S/ {amountPen.toFixed(2)}
+                  </span>
+                </div>
+              )}
+            </div>
           )}
 
           {/* Categoría */}
@@ -253,11 +369,7 @@ export function TransactionModal({ transaction, categories, userId, onSaved, onD
               </label>
               {type === 'expense' && date && (
                 <span className="text-xs text-muted-foreground">
-                  {loadingCats
-                    ? 'Cargando...'
-                    : budgetCatIds !== null
-                      ? `${filteredCats.length} del presupuesto`
-                      : 'Todas las categorías'}
+                  {loadingCats ? 'Cargando...' : budgetCatIds !== null ? `${filteredCats.length} del presupuesto` : 'Todas las categorías'}
                 </span>
               )}
             </div>
@@ -266,7 +378,7 @@ export function TransactionModal({ transaction, categories, userId, onSaved, onD
               onChange={e => setCategoryId(e.target.value)}
               required
               disabled={loadingCats}
-              className={`w-full rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring ${!categoryId ? 'border-red-200 bg-red-50' : 'border-border'} ${loadingCats ? 'opacity-50' : ''}`}
+              className={`w-full rounded-lg border px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring ${!categoryId ? 'border-red-200 bg-red-50 dark:bg-red-950/20' : 'border-border bg-background'} ${loadingCats ? 'opacity-50' : ''}`}
             >
               <option value="" disabled>Selecciona una categoría</option>
               {filteredCats.map(c => (
@@ -283,11 +395,11 @@ export function TransactionModal({ transaction, categories, userId, onSaved, onD
               onChange={e => setNotes(e.target.value)}
               rows={2}
               placeholder="Detalles adicionales..."
-              className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring resize-none"
+              className={`${inputClass} resize-none`}
             />
           </div>
 
-          {error && <p className="text-xs text-red-500">{error}</p>}
+          {error && <p className="text-xs text-red-500 bg-red-50 dark:bg-red-950/20 rounded-lg px-3 py-2">{error}</p>}
 
           {/* Botones */}
           <div className="flex gap-2 pt-1">

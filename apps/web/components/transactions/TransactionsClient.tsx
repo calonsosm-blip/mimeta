@@ -28,6 +28,7 @@ interface Props {
   transactions: Transaction[]
   categories: Category[]
   userId: string
+  baseCurrency: 'PEN' | 'USD'
 }
 
 function fmt(n: number) {
@@ -36,7 +37,7 @@ function fmt(n: number) {
 
 const MONTHS = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic']
 
-export function TransactionsClient({ transactions, categories, userId }: Props) {
+export function TransactionsClient({ transactions, categories, userId, baseCurrency }: Props) {
   const isMobile = useIsMobile()
   const [txList, setTxList] = useState(transactions)
   const [showModal, setShowModal] = useState(false)
@@ -225,6 +226,7 @@ export function TransactionsClient({ transactions, categories, userId }: Props) 
           transaction={editing}
           categories={categories}
           userId={userId}
+          baseCurrency={baseCurrency}
           onSaved={handleSaved}
           onDeleted={handleDeleted}
           onClose={() => { setShowModal(false); setEditing(null) }}
