@@ -21,7 +21,17 @@ export default function LoginPage() {
   const [showPassword, setShowPassword]     = useState(false)
   const [showConfirm, setShowConfirm]       = useState(false)
   const [signingIn, setSigningIn]           = useState(false)
+  const [progress, setProgress]             = useState(0)
   const supabase = createClient()
+
+  useEffect(() => {
+    if (!signingIn) { setProgress(0); return }
+    setProgress(30)
+    const t1 = setTimeout(() => setProgress(60), 400)
+    const t2 = setTimeout(() => setProgress(80), 1000)
+    const t3 = setTimeout(() => setProgress(92), 2500)
+    return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3) }
+  }, [signingIn])
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
@@ -90,20 +100,6 @@ export default function LoginPage() {
 
   const inputClass = 'w-full rounded-xl border border-border bg-background px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 transition-colors'
 
-  if (signingIn) {
-    return (
-      <div className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-6 bg-background">
-        <div className="relative flex items-center justify-center">
-          <div className="absolute h-20 w-20 animate-spin rounded-full border-4 border-border border-t-primary" />
-          <div className="relative z-10 h-12 w-12 overflow-hidden rounded-full">
-            <img src="/mimeta-isotipo.png" alt="MiMeta" className="h-full w-full object-contain" />
-          </div>
-        </div>
-        <p className="text-sm font-medium text-muted-foreground animate-pulse">Iniciando sesión...</p>
-      </div>
-    )
-  }
-
   if (sentType) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-muted px-4">
@@ -132,6 +128,15 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen flex flex-col lg:flex-row bg-muted">
+      {/* Barra de progreso superior */}
+      {signingIn && (
+        <div className="fixed top-0 left-0 right-0 z-50 h-1 bg-border">
+          <div
+            className="h-full bg-primary transition-all ease-out"
+            style={{ width: `${progress}%`, transitionDuration: progress === 30 ? '300ms' : '900ms' }}
+          />
+        </div>
+      )}
       {/* Panel izquierdo — branding */}
       <div className="hidden lg:flex lg:w-[45%] flex-col justify-between bg-foreground p-12">
         <div className="flex items-center gap-3">
