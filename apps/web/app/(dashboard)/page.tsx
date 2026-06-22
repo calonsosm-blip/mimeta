@@ -1,8 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
 import { DashboardClient } from '@/components/dashboard/DashboardClient'
-import type { MonthBalance } from '@/components/dashboard/BalanceEvolutionChart'
-
-const MONTHS_SHORT = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic']
 
 interface Props {
   searchParams: Promise<{ year?: string; month?: string }>
@@ -24,13 +21,9 @@ export default async function DashboardPage({ searchParams }: Props) {
   const dateFrom = `${year}-${String(month).padStart(2, '0')}-01`
   const dateTo   = `${year}-${String(month).padStart(2, '0')}-${String(daysInMonth).padStart(2, '0')}`
 
-  // Rango de 12 meses para el historial
-  const histStart = new Date(now.getFullYear(), now.getMonth() - 11, 1)
-  const histStartStr = `${histStart.getFullYear()}-${String(histStart.getMonth() + 1).padStart(2, '0')}-01`
-
   const [
     profileRes, balanceRes, recentRes, upcomingRes,
-    budgetTotalRes, expensesRes, cumulativeRes, historyRes,
+    budgetTotalRes, expensesRes, cumulativeRes,
   ] = await Promise.all([
     supabase.from('profiles').select('display_name, plan').eq('id', user!.id).single(),
     supabase.rpc('get_monthly_balance', { p_user_id: user!.id, p_year: year, p_month: month }),
@@ -69,12 +62,6 @@ export default async function DashboardPage({ searchParams }: Props) {
       .select('type, amount_pen')
       .eq('user_id', user!.id)
       .lte('date', dateTo),
-    supabase
-      .from('transactions')
-      .select('type, amount_pen, date')
-      .eq('user_id', user!.id)
-      .gte('date', histStartStr)
-      .order('date'),
   ])
 
   const balance     = balanceRes.data?.[0] ?? { income: 0, expenses: 0, balance: 0 }
@@ -94,28 +81,6 @@ export default async function DashboardPage({ searchParams }: Props) {
     .map(([name, total]) => ({ name, total }))
     .sort((a, b) => b.total - a.total)
 
-  // Historial mensual (últimos 12 meses)
-  const monthlyMap: Record<string, { income: number; expenses: number }> = {}
-  for (const tx of (historyRes.data ?? []) as any[]) {
-    const [y, m] = (tx.date as string).split('-')
-    const key = `${y}-${m}`
-    if (!monthlyMap[key]) monthlyMap[key] = { income: 0, expenses: 0 }
-    if (tx.type === 'income') monthlyMap[key].income += tx.amount_pen
-    else monthlyMap[key].expenses += tx.amount_pen
-  }
-
-  const balanceHistory: MonthBalance[] = Array.from({ length: 12 }, (_, i) => {
-    const d   = new Date(now.getFullYear(), now.getMonth() - 11 + i)
-    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
-    const data = monthlyMap[key] ?? { income: 0, expenses: 0 }
-    return {
-      label:    `${MONTHS_SHORT[d.getMonth()]} ${d.getFullYear().toString().slice(2)}`,
-      income:   data.income,
-      expenses: data.expenses,
-      balance:  data.income - data.expenses,
-    }
-  })
-
   return (
     <DashboardClient
       profile={profileRes.data}
@@ -130,7 +95,6 @@ export default async function DashboardPage({ searchParams }: Props) {
       isCurrentMonth={isCurrentMonth}
       expenseByCategory={expenseByCategory}
       cumulativeBalance={cumulativeBalance}
-      balanceHistory={balanceHistory}
     />
   )
 }

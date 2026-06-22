@@ -5,8 +5,6 @@ import { useRouter } from 'next/navigation'
 import { Eye, EyeOff, ChevronLeft, ChevronRight } from 'lucide-react'
 import { MonthThermometer } from './MonthThermometer'
 import { ExpenseDonutChart } from './ExpenseDonutChart'
-import { BalanceEvolutionChart } from './BalanceEvolutionChart'
-import type { MonthBalance } from './BalanceEvolutionChart'
 
 interface Props {
   profile: { display_name: string | null; plan: string } | null
@@ -29,7 +27,6 @@ interface Props {
   isCurrentMonth: boolean
   expenseByCategory: { name: string; total: number }[]
   cumulativeBalance: number
-  balanceHistory: MonthBalance[]
 }
 
 const MONTHS_LONG = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre']
@@ -42,7 +39,6 @@ export function DashboardClient({
   profile, balance, recentTransactions, upcomingReminders,
   totalBudget, today, daysInMonth,
   selectedYear, selectedMonth, isCurrentMonth, expenseByCategory, cumulativeBalance,
-  balanceHistory,
 }: Props) {
   const [invisible, setInvisible] = useState(false)
   const router = useRouter()
@@ -225,9 +221,6 @@ export function DashboardClient({
           )}
         </div>
       </div>
-
-      {/* Gráfica evolución de balance */}
-      <BalanceEvolutionChart data={balanceHistory} invisible={invisible} />
 
       {/* Distribución de gastos + Transacciones recientes */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
