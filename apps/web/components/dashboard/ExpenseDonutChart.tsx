@@ -66,15 +66,15 @@ export function ExpenseDonutChart({ data, invisible = false }: Props) {
 
       <div className="flex flex-col sm:flex-row gap-6 items-start sm:items-center">
         {/* Donut */}
-        <div className="relative shrink-0 w-32 h-32 sm:w-40 sm:h-40 mx-auto sm:mx-0">
+        <div className="relative shrink-0 w-36 h-36 sm:w-44 sm:h-44 mx-auto sm:mx-0">
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
               <Pie
                 data={chartData}
                 cx="50%"
                 cy="50%"
-                innerRadius={48}
-                outerRadius={72}
+                innerRadius={isMobile ? 42 : 52}
+                outerRadius={isMobile ? 64 : 80}
                 paddingAngle={2}
                 dataKey="value"
                 strokeWidth={0}
