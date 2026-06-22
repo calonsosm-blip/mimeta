@@ -30,6 +30,7 @@ const ACCENT_OPTIONS = [
   { key: 'aurora',   label: '✦ Aurora', color: '#7C3AED', badge: 'Premium' },
   { key: 'bosque',   label: '🌿 Bosque', color: '#16A34A', badge: 'Premium' },
   { key: 'sakura',   label: '🌸 Sakura', color: '#DB2777', badge: 'Premium' },
+  { key: 'pride',    label: '🌈 Pride',  color: '#8B5CF6', badge: 'Premium' },
 ]
 
 export function SettingsClient({ profile, categories, userId }: Props) {

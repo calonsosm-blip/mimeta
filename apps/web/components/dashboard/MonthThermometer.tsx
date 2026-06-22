@@ -64,7 +64,7 @@ export function MonthThermometer({ expenses, income, budget, today, daysInMonth,
         </div>
         <div className="h-3 w-full rounded-full bg-muted overflow-hidden">
           <div
-            className={`h-full rounded-full transition-all ${colors.bar}`}
+            className={`h-full rounded-full transition-all rainbow-bar ${colors.bar}`}
             style={{ width: hasBudget ? `${spentPct}%` : '0%' }}
           />
         </div>

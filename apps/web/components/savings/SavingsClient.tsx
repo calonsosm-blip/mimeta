@@ -314,7 +314,7 @@ export function SavingsClient({
         <div className="col-span-2 rounded-xl border border-primary/15 bg-card p-[14px_16px]">
           <span className="text-xs font-semibold text-foreground">Balance acumulado disponible</span>
           <div className="h-2 bg-border rounded-full overflow-hidden mt-2">
-            <div className="h-full rounded-full bg-primary transition-all duration-500" style={{ width: `${poolPct}%` }} />
+            <div className="h-full rounded-full bg-primary rainbow-bar transition-all duration-500" style={{ width: `${poolPct}%` }} />
           </div>
           <div className="mt-1.5 text-[11px] text-muted-foreground space-y-0.5">
             <div className="flex justify-between">
@@ -344,7 +344,7 @@ export function SavingsClient({
         <div className="rounded-xl border border-primary/15 bg-card p-[14px_16px]">
           <span className="text-xs font-semibold text-foreground">Progreso total de metas</span>
           <div className="h-2 bg-border rounded-full overflow-hidden mt-2">
-            <div className="h-full rounded-full bg-primary transition-all duration-500" style={{ width: `${totalPct}%` }} />
+            <div className="h-full rounded-full bg-primary rainbow-bar transition-all duration-500" style={{ width: `${totalPct}%` }} />
           </div>
           <div className="mt-1.5 text-[11px] text-muted-foreground space-y-0.5">
             <div className="flex justify-between">
@@ -427,7 +427,7 @@ export function SavingsClient({
             </div>
             <div className="h-1.5 bg-border rounded-full overflow-hidden">
               <div
-                className={`h-full rounded-full transition-all duration-300 ${pctExceeds100 ? 'bg-red-500' : 'bg-primary'}`}
+                className={`h-full rounded-full transition-all duration-300 rainbow-bar ${pctExceeds100 ? 'bg-red-500' : 'bg-primary'}`}
                 style={{ width: `${Math.min(totalPctAssigned, 100)}%` }}
               />
             </div>

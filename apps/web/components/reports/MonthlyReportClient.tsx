@@ -354,7 +354,7 @@ export function MonthlyReportClient({ transactions, mode, year, month, from, to,
                       <span className="text-sm font-semibold text-foreground ml-4 shrink-0">S/ {fmt(total)}</span>
                     </div>
                     <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden">
-                      <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${pct}%` }} />
+                      <div className="h-full rounded-full bg-primary rainbow-bar transition-all" style={{ width: `${pct}%` }} />
                     </div>
                   </div>
                   <span className="text-xs text-muted-foreground shrink-0 w-10 text-right">{pct.toFixed(1)}%</span>
