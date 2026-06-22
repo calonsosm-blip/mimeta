@@ -70,9 +70,9 @@ export function ExpenseDonutChart({ data, invisible = false }: Props) {
         </div>
       </div>
 
-      <div className="flex flex-col sm:flex-row gap-6 items-start sm:items-center">
+      <div className="flex flex-row gap-4 items-center">
         {/* Donut */}
-        <div className="relative shrink-0 w-36 h-36 sm:w-44 sm:h-44 mx-auto sm:mx-0" style={{ overflow: 'visible' }}>
+        <div className="relative shrink-0 w-32 h-32 sm:w-40 sm:h-40" style={{ overflow: 'visible' }}>
           <ResponsiveContainer width="100%" height="100%">
             <PieChart margin={{ top: 4, right: 4, bottom: 4, left: 4 }}>
               <Pie
