@@ -63,6 +63,7 @@ export function TransactionModal({ transaction, categories, userId, baseCurrency
   const [exchangeRate, setExchangeRate] = useState<string>('')
   const [loadingRate, setLoadingRate]   = useState(false)
   const [rateNotFound, setRateNotFound] = useState(false)
+  const [rateSource, setRateSource]     = useState<'db' | 'live' | 'none' | null>(null)
 
   // Si estamos editando una transacción en USD, derivar el TC original
   useEffect(() => {
@@ -81,19 +82,24 @@ export function TransactionModal({ transaction, categories, userId, baseCurrency
     setLoadingRate(true)
     setRateNotFound(false)
 
-    supabase
-      .from('exchange_rates')
-      .select('usd_to_pen')
-      .eq('date', date)
-      .maybeSingle()
-      .then(({ data }) => {
-        if (data?.usd_to_pen) {
-          setExchangeRate(data.usd_to_pen.toString())
+    fetch(`/api/exchange-rate?date=${date}`)
+      .then(r => r.json())
+      .then(({ rate, source }) => {
+        if (rate) {
+          setExchangeRate(rate.toString())
+          setRateSource(source)
           setRateNotFound(false)
         } else {
           setExchangeRate('')
+          setRateSource('none')
           setRateNotFound(true)
         }
+        setLoadingRate(false)
+      })
+      .catch(() => {
+        setExchangeRate('')
+        setRateSource('none')
+        setRateNotFound(true)
         setLoadingRate(false)
       })
   }, [date, needsConversion, rateMode])
@@ -103,8 +109,10 @@ export function TransactionModal({ transaction, categories, userId, baseCurrency
     if (!needsConversion) {
       setExchangeRate('')
       setRateNotFound(false)
+      setRateSource(null)
     } else if (rateMode === 'auto') {
       setExchangeRate('')
+      setRateSource(null)
     }
   }, [currency])
 
@@ -346,7 +354,9 @@ export function TransactionModal({ transaction, categories, userId, baseCurrency
               )}
               {rateMode === 'auto' && !rateNotFound && exchangeRate && (
                 <p className="text-xs text-muted-foreground">
-                  TC obtenido de la tabla de tipos de cambio del sistema.
+                  {rateSource === 'live'
+                    ? 'TC obtenido en tiempo real desde open.er-api.com.'
+                    : 'TC obtenido del historial registrado.'}
                 </p>
               )}
 
