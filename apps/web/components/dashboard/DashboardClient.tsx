@@ -137,31 +137,31 @@ export function DashboardClient({
       </div>
 
       {/* Tarjetas resumen */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
-          <p className="text-sm font-medium text-muted-foreground">Ingresos</p>
-          <p className="mt-2 text-2xl font-bold text-emerald-500 dark:text-emerald-400">
+      <div className="grid grid-cols-3 gap-2 sm:gap-4">
+        <div className="rounded-xl border border-border bg-card p-3 sm:p-6 shadow-sm">
+          <p className="text-xs sm:text-sm font-medium text-muted-foreground">Ingresos</p>
+          <p className="mt-1 sm:mt-2 text-base sm:text-2xl font-bold text-emerald-500 dark:text-emerald-400 truncate">
             S/ {mask(fmt(balance.income))}
           </p>
         </div>
-        <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
-          <p className="text-sm font-medium text-muted-foreground">Egresos</p>
-          <p className="mt-2 text-2xl font-bold text-slate-500 dark:text-slate-400">
+        <div className="rounded-xl border border-border bg-card p-3 sm:p-6 shadow-sm">
+          <p className="text-xs sm:text-sm font-medium text-muted-foreground">Egresos</p>
+          <p className="mt-1 sm:mt-2 text-base sm:text-2xl font-bold text-slate-500 dark:text-slate-400 truncate">
             S/ {mask(fmt(balance.expenses))}
           </p>
         </div>
-        <div className={`rounded-xl border p-6 shadow-sm ${
+        <div className={`rounded-xl border p-3 sm:p-6 shadow-sm ${
           balance.balance >= 0
             ? 'border-accent bg-accent'
             : 'border-red-200 dark:border-red-900 bg-red-50 dark:bg-red-950/30'
         }`}>
-          <p className="text-sm font-medium text-muted-foreground">Balance</p>
-          <p className={`mt-2 text-2xl font-bold ${
+          <p className="text-xs sm:text-sm font-medium text-muted-foreground">Balance</p>
+          <p className={`mt-1 sm:mt-2 text-base sm:text-2xl font-bold truncate ${
             balance.balance >= 0 ? 'text-accent-foreground' : 'text-red-600 dark:text-red-400'
           }`}>
             S/ {mask(fmt(balance.balance))}
           </p>
-          <p className="mt-1.5 text-xs text-muted-foreground">
+          <p className="mt-1 hidden sm:block text-xs text-muted-foreground">
             Acumulado:{' '}
             <span className={`font-medium ${
               cumulativeBalance >= 0 ? 'text-primary' : 'text-red-500 dark:text-red-400'
@@ -171,6 +171,13 @@ export function DashboardClient({
           </p>
         </div>
       </div>
+      {/* Acumulado visible solo en móvil, debajo de las cards */}
+      <p className="sm:hidden text-xs text-muted-foreground -mt-2">
+        Acumulado:{' '}
+        <span className={`font-medium ${cumulativeBalance >= 0 ? 'text-primary' : 'text-red-500 dark:text-red-400'}`}>
+          {invisible ? '••••' : `S/ ${fmt(cumulativeBalance)}`}
+        </span>
+      </p>
 
       {/* Termómetro + Alertas */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
