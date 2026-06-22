@@ -39,6 +39,9 @@ export function SettingsClient({ profile, categories, userId }: Props) {
   const router = useRouter()
   const [cats, setCats] = useState(categories)
   const [displayName, setDisplayName] = useState(profile?.display_name ?? '')
+  const [currency, setCurrency] = useState<'PEN' | 'USD'>(
+    (profile?.base_currency as 'PEN' | 'USD') ?? 'PEN'
+  )
   const [savingProfile, setSavingProfile] = useState(false)
   const [profileMsg, setProfileMsg] = useState('')
   const [mounted, setMounted] = useState(false)
@@ -68,7 +71,7 @@ export function SettingsClient({ profile, categories, userId }: Props) {
   async function saveProfile(e: React.FormEvent) {
     e.preventDefault()
     setSavingProfile(true)
-    await supabase.from('profiles').update({ display_name: displayName.trim() }).eq('id', userId)
+    await supabase.from('profiles').update({ display_name: displayName.trim(), base_currency: currency }).eq('id', userId)
     setProfileMsg('¡Guardado!')
     setSavingProfile(false)
     setTimeout(() => setProfileMsg(''), 2000)
@@ -132,6 +135,29 @@ export function SettingsClient({ profile, categories, userId }: Props) {
               onChange={e => setDisplayName(e.target.value)}
               className={inputClass}
             />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-muted-foreground mb-1">Moneda principal</label>
+            <div className="flex gap-2">
+              {(['PEN', 'USD'] as const).map(c => (
+                <button
+                  key={c}
+                  type="button"
+                  onClick={() => setCurrency(c)}
+                  className={`flex items-center gap-2 rounded-lg border px-4 py-2 text-sm transition-colors ${
+                    currency === c
+                      ? 'border-primary bg-primary/10 text-primary font-semibold'
+                      : 'border-border text-muted-foreground hover:bg-muted'
+                  }`}
+                >
+                  <span className="text-base">{c === 'PEN' ? '🇵🇪' : '🇺🇸'}</span>
+                  <span>{c === 'PEN' ? 'Sol (PEN)' : 'Dólar (USD)'}</span>
+                </button>
+              ))}
+            </div>
+            <p className="mt-1.5 text-xs text-muted-foreground">
+              Se usa como moneda base para reportes y presupuestos.
+            </p>
           </div>
           <div>
             <label className="block text-xs font-medium text-muted-foreground mb-1">Plan</label>
