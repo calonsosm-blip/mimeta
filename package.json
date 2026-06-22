@@ -10,5 +10,8 @@
   "devDependencies": {
     "turbo": "^2.3.0"
   },
-  "packageManager": "pnpm@11.7.0"
+  "packageManager": "pnpm@11.7.0",
+  "pnpm": {
+    "onlyBuiltDependencies": ["core-js", "sharp", "unrs-resolver"]
+  }
 }
