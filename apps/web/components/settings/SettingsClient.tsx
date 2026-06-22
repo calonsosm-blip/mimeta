@@ -23,13 +23,13 @@ interface Props {
 
 const ACCENT_OPTIONS = [
   { key: 'mimeta',   label: 'MiMeta',   color: '#0e7c4a', badge: ''    },
-  { key: 'midnight', label: 'Midnight', color: '#14b8a6', badge: 'Pro' },
-  { key: 'oro',      label: 'Oro',      color: '#d4af37', badge: 'Pro' },
-  { key: 'carbon',   label: '🔥 Carbón', color: '#EA580C', badge: 'Pro' },
-  { key: 'oceano',   label: '🌊 Océano', color: '#0E7490', badge: 'Pro' },
-  { key: 'aurora',   label: '✦ Aurora', color: '#7C3AED', badge: 'Pro' },
-  { key: 'bosque',   label: '🌿 Bosque', color: '#16A34A', badge: 'Pro' },
-  { key: 'sakura',   label: '🌸 Sakura', color: '#DB2777', badge: 'Pro' },
+  { key: 'midnight', label: 'Midnight', color: '#14b8a6', badge: 'Premium' },
+  { key: 'oro',      label: 'Oro',      color: '#d4af37', badge: 'Premium' },
+  { key: 'carbon',   label: '🔥 Carbón', color: '#EA580C', badge: 'Premium' },
+  { key: 'oceano',   label: '🌊 Océano', color: '#0E7490', badge: 'Premium' },
+  { key: 'aurora',   label: '✦ Aurora', color: '#7C3AED', badge: 'Premium' },
+  { key: 'bosque',   label: '🌿 Bosque', color: '#16A34A', badge: 'Premium' },
+  { key: 'sakura',   label: '🌸 Sakura', color: '#DB2777', badge: 'Premium' },
 ]
 
 export function SettingsClient({ profile, categories, userId }: Props) {
