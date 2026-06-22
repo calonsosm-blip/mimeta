@@ -20,6 +20,7 @@ export default function LoginPage() {
   const [error, setError]                   = useState<string | null>(null)
   const [showPassword, setShowPassword]     = useState(false)
   const [showConfirm, setShowConfirm]       = useState(false)
+  const [signingIn, setSigningIn]           = useState(false)
   const supabase = createClient()
 
   useEffect(() => {
@@ -88,6 +89,20 @@ export default function LoginPage() {
   }
 
   const inputClass = 'w-full rounded-xl border border-border bg-background px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 transition-colors'
+
+  if (signingIn) {
+    return (
+      <div className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-6 bg-background">
+        <div className="relative flex items-center justify-center">
+          <div className="absolute h-20 w-20 animate-spin rounded-full border-4 border-border border-t-primary" />
+          <div className="relative z-10 h-12 w-12 overflow-hidden rounded-full">
+            <img src="/mimeta-isotipo.png" alt="MiMeta" className="h-full w-full object-contain" />
+          </div>
+        </div>
+        <p className="text-sm font-medium text-muted-foreground animate-pulse">Iniciando sesión...</p>
+      </div>
+    )
+  }
 
   if (sentType) {
     return (
@@ -194,7 +209,8 @@ export default function LoginPage() {
 
           {/* Formulario contraseña — HTML nativo para manejar cookies en servidor */}
           {mode === 'password' && (
-            <form action="/api/auth/signin" method="POST" className="space-y-4">
+            <form action="/api/auth/signin" method="POST" className="space-y-4"
+              onSubmit={() => setSigningIn(true)}>
               <div className="space-y-1.5">
                 <label htmlFor="email" className="text-xs font-semibold text-foreground/80">Correo electrónico</label>
                 <input
