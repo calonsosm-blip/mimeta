@@ -10,13 +10,15 @@ export default async function DashboardPage({ searchParams }: Props) {
   const { data: { user } } = await supabase.auth.getUser()
 
   const params = await searchParams
-  const now = new Date()
-  const year  = parseInt(params.year  ?? '') || now.getFullYear()
-  const month = parseInt(params.month ?? '') || now.getMonth() + 1
-  const isCurrentMonth = year === now.getFullYear() && month === now.getMonth() + 1
-  const isFutureMonth  = year > now.getFullYear() || (year === now.getFullYear() && month > now.getMonth() + 1)
+  // Fecha actual en zona horaria de Lima (UTC-5) para evitar desfase de día
+  const limaStr  = new Date().toLocaleString('en-CA', { timeZone: 'America/Lima' })
+  const limaDate = new Date(limaStr)
+  const year  = parseInt(params.year  ?? '') || limaDate.getFullYear()
+  const month = parseInt(params.month ?? '') || limaDate.getMonth() + 1
+  const isCurrentMonth = year === limaDate.getFullYear() && month === limaDate.getMonth() + 1
+  const isFutureMonth  = year > limaDate.getFullYear() || (year === limaDate.getFullYear() && month > limaDate.getMonth() + 1)
   const daysInMonth = new Date(year, month, 0).getDate()
-  const today = isCurrentMonth ? now.getDate() : isFutureMonth ? 0 : daysInMonth
+  const today = isCurrentMonth ? limaDate.getDate() : isFutureMonth ? 0 : daysInMonth
 
   const dateFrom = `${year}-${String(month).padStart(2, '0')}-01`
   const dateTo   = `${year}-${String(month).padStart(2, '0')}-${String(daysInMonth).padStart(2, '0')}`
