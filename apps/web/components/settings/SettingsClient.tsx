@@ -3,21 +3,13 @@
 import { useState, useEffect } from 'react'
 import { useTheme } from 'next-themes'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { setAccentTheme, getAccentTheme } from '@/components/providers/ThemeProvider'
 import { Sun, Moon, LogOut, Crown } from 'lucide-react'
 
-interface Category {
-  id: string
-  name: string
-  type: string
-  parent_id: string | null
-  sort_order: number
-}
-
 interface Props {
   profile: { display_name: string | null; base_currency: string; plan: string } | null
-  categories: Category[]
   userId: string
 }
 
@@ -33,11 +25,10 @@ const ACCENT_OPTIONS = [
   { key: 'pride',    label: '🌈 Pride',  color: '#8B5CF6', badge: 'Premium' },
 ]
 
-export function SettingsClient({ profile, categories, userId }: Props) {
+export function SettingsClient({ profile, userId }: Props) {
   const supabase = createClient()
   const { theme, setTheme } = useTheme()
   const router = useRouter()
-  const [cats, setCats] = useState(categories)
   const [displayName, setDisplayName] = useState(profile?.display_name ?? '')
   const [currency, setCurrency] = useState<'PEN' | 'USD'>(
     (profile?.base_currency as 'PEN' | 'USD') ?? 'PEN'
@@ -46,12 +37,6 @@ export function SettingsClient({ profile, categories, userId }: Props) {
   const [profileMsg, setProfileMsg] = useState('')
   const [mounted, setMounted] = useState(false)
   const [accent, setAccentState] = useState('mimeta')
-
-  const [newName, setNewName] = useState('')
-  const [newType, setNewType] = useState<'income' | 'expense'>('expense')
-  const [addingCat, setAddingCat] = useState(false)
-  const [editingId, setEditingId] = useState<string | null>(null)
-  const [editName, setEditName] = useState('')
 
   useEffect(() => {
     setMounted(true)
@@ -76,44 +61,6 @@ export function SettingsClient({ profile, categories, userId }: Props) {
     setSavingProfile(false)
     setTimeout(() => setProfileMsg(''), 2000)
   }
-
-  async function addCategory(e: React.FormEvent) {
-    e.preventDefault()
-    if (!newName.trim()) return
-    setAddingCat(true)
-    const { data, error } = await supabase
-      .from('categories')
-      .insert({ user_id: userId, name: newName.trim(), type: newType, sort_order: cats.length })
-      .select('id, name, type, parent_id, sort_order')
-      .single()
-    if (!error && data) { setCats(prev => [...prev, data]); setNewName('') }
-    setAddingCat(false)
-  }
-
-  async function saveEdit(id: string) {
-    if (!editName.trim()) return
-    await supabase.from('categories').update({ name: editName.trim() }).eq('id', id)
-    setCats(prev => prev.map(c => c.id === id ? { ...c, name: editName.trim() } : c))
-    setEditingId(null)
-  }
-
-  async function deleteCategory(id: string) {
-    const { count } = await supabase
-      .from('transactions')
-      .select('id', { count: 'exact', head: true })
-      .eq('category_id', id)
-    if ((count ?? 0) > 0) {
-      alert(`No se puede eliminar: hay ${count} transacción${count === 1 ? '' : 'es'} registrada${count === 1 ? '' : 's'} con esta categoría.`)
-      return
-    }
-    if (!confirm('¿Eliminar esta categoría? También se quitará de todos los presupuestos.')) return
-    await supabase.from('budgets').delete().eq('category_id', id)
-    await supabase.from('categories').delete().eq('id', id)
-    setCats(prev => prev.filter(c => c.id !== id))
-  }
-
-  const incomeCategories  = cats.filter(c => c.type === 'income')
-  const expenseCategories = cats.filter(c => c.type === 'expense')
 
   const inputClass = 'w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring'
   const cardClass  = 'rounded-xl border border-border bg-card p-6 shadow-sm'
@@ -233,92 +180,16 @@ export function SettingsClient({ profile, categories, userId }: Props) {
 
       {/* Categorías */}
       <section className={cardClass}>
-        <h2 className="text-base font-semibold text-foreground mb-4">Categorías</h2>
-
-        <form onSubmit={addCategory} className="flex gap-2 mb-6">
-          <input
-            type="text"
-            value={newName}
-            onChange={e => setNewName(e.target.value)}
-            placeholder="Nueva categoría..."
-            className="flex-1 rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-          />
-          <select
-            value={newType}
-            onChange={e => setNewType(e.target.value as 'income' | 'expense')}
-            className="rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-          >
-            <option value="expense">Egreso</option>
-            <option value="income">Ingreso</option>
-          </select>
-          <button type="submit" disabled={addingCat} className={btnPrimary}>
-            Agregar
-          </button>
-        </form>
-
-        {/* Lista egresos */}
-        <div className="mb-4">
-          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Egresos</p>
-          <ul className="space-y-1">
-            {expenseCategories.map(cat => (
-              <li key={cat.id} className="flex items-center justify-between rounded-lg px-3 py-2 hover:bg-muted">
-                {editingId === cat.id ? (
-                  <div className="flex flex-1 gap-2 mr-2">
-                    <input
-                      autoFocus
-                      value={editName}
-                      onChange={e => setEditName(e.target.value)}
-                      onKeyDown={e => { if (e.key === 'Enter') saveEdit(cat.id); if (e.key === 'Escape') setEditingId(null) }}
-                      className="flex-1 rounded border border-border bg-background px-2 py-1 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
-                    />
-                    <button onClick={() => saveEdit(cat.id)} className="text-xs text-primary font-medium">Guardar</button>
-                    <button onClick={() => setEditingId(null)} className="text-xs text-muted-foreground">Cancelar</button>
-                  </div>
-                ) : (
-                  <>
-                    <span className="text-sm text-foreground">{cat.name}</span>
-                    <div className="flex gap-3">
-                      <button onClick={() => { setEditingId(cat.id); setEditName(cat.name) }} className="text-xs text-muted-foreground hover:text-primary">Editar</button>
-                      <button onClick={() => deleteCategory(cat.id)} className="text-xs text-muted-foreground hover:text-destructive">Eliminar</button>
-                    </div>
-                  </>
-                )}
-              </li>
-            ))}
-          </ul>
-        </div>
-
-        {/* Lista ingresos */}
-        <div>
-          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Ingresos</p>
-          <ul className="space-y-1">
-            {incomeCategories.map(cat => (
-              <li key={cat.id} className="flex items-center justify-between rounded-lg px-3 py-2 hover:bg-muted">
-                {editingId === cat.id ? (
-                  <div className="flex flex-1 gap-2 mr-2">
-                    <input
-                      autoFocus
-                      value={editName}
-                      onChange={e => setEditName(e.target.value)}
-                      onKeyDown={e => { if (e.key === 'Enter') saveEdit(cat.id); if (e.key === 'Escape') setEditingId(null) }}
-                      className="flex-1 rounded border border-border bg-background px-2 py-1 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
-                    />
-                    <button onClick={() => saveEdit(cat.id)} className="text-xs text-primary font-medium">Guardar</button>
-                    <button onClick={() => setEditingId(null)} className="text-xs text-muted-foreground">Cancelar</button>
-                  </div>
-                ) : (
-                  <>
-                    <span className="text-sm text-foreground">{cat.name}</span>
-                    <div className="flex gap-3">
-                      <button onClick={() => { setEditingId(cat.id); setEditName(cat.name) }} className="text-xs text-muted-foreground hover:text-primary">Editar</button>
-                      <button onClick={() => deleteCategory(cat.id)} className="text-xs text-muted-foreground hover:text-destructive">Eliminar</button>
-                    </div>
-                  </>
-                )}
-              </li>
-            ))}
-          </ul>
-        </div>
+        <h2 className="text-base font-semibold text-foreground mb-2">Categorías</h2>
+        <p className="text-sm text-muted-foreground mb-4">
+          Gestiona tus categorías de ingresos y egresos desde la página de Presupuesto.
+        </p>
+        <Link
+          href="/budgets"
+          className="inline-flex items-center gap-2 rounded-lg border border-border px-4 py-2 text-sm text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+        >
+          Ir a Presupuesto →
+        </Link>
       </section>
 
       {/* Sesión */}

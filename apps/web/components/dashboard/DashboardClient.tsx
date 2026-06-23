@@ -29,6 +29,7 @@ interface Props {
   isCurrentMonth: boolean
   expenseByCategory: { name: string; total: number }[]
   cumulativeBalance: number
+  projectedIncome: number
 }
 
 const MONTHS_LONG = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre']
@@ -40,7 +41,7 @@ function fmt(amount: number) {
 export function DashboardClient({
   profile, baseCurrency, balance, recentTransactions, upcomingReminders,
   totalBudget, today, daysInMonth,
-  selectedYear, selectedMonth, isCurrentMonth, expenseByCategory, cumulativeBalance,
+  selectedYear, selectedMonth, isCurrentMonth, expenseByCategory, cumulativeBalance, projectedIncome,
 }: Props) {
   const [liveRate, setLiveRate] = useState<number | null>(null)
 
@@ -189,6 +190,11 @@ export function DashboardClient({
           <p className="mt-1 sm:mt-2 text-base sm:text-2xl font-bold text-emerald-500 dark:text-emerald-400 truncate">
             {sym} {mask(fmt(toBase(balance.income)))}
           </p>
+          {projectedIncome > 0 && (
+            <p className="mt-1 text-xs text-muted-foreground truncate">
+              Proyectado: <span className="font-medium">{invisible ? '••••' : `${sym} ${fmt(toBase(projectedIncome))}`}</span>
+            </p>
+          )}
         </div>
         <div className="rounded-xl border border-border bg-card p-3 sm:p-6 shadow-sm">
           <p className="text-xs sm:text-sm font-medium text-muted-foreground">Egresos</p>

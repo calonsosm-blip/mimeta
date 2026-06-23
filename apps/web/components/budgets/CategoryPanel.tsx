@@ -23,6 +23,7 @@ interface Category { id: string; name: string; type: string; sort_order: number 
 interface Props {
   categories: Category[]
   userId: string
+  type?: 'income' | 'expense'
   onChange: (cats: Category[]) => void
   onClose: () => void
 }
@@ -124,7 +125,7 @@ function SortableItem({
   )
 }
 
-export function CategoryPanel({ categories: initialCats, userId, onChange, onClose }: Props) {
+export function CategoryPanel({ categories: initialCats, userId, type = 'expense', onChange, onClose }: Props) {
   const supabase = createClient()
   const [cats, setCats] = useState(initialCats)
   const [newCatName, setNewCatName] = useState('')
@@ -157,7 +158,7 @@ export function CategoryPanel({ categories: initialCats, userId, onChange, onClo
     setAddingCat(true)
     const { data } = await supabase
       .from('categories')
-      .insert({ user_id: userId, name: newCatName.trim(), type: 'expense', sort_order: cats.length })
+      .insert({ user_id: userId, name: newCatName.trim(), type, sort_order: cats.length })
       .select('id, name, type, sort_order')
       .single()
     if (data) {
@@ -206,7 +207,7 @@ export function CategoryPanel({ categories: initialCats, userId, onChange, onClo
       <div className="fixed right-0 top-0 z-50 h-full w-80 bg-card shadow-2xl flex flex-col">
         <div className="flex items-center justify-between border-b border-border px-5 py-4">
           <div>
-            <h2 className="text-base font-semibold text-foreground">Categorías de egreso</h2>
+            <h2 className="text-base font-semibold text-foreground">{type === 'income' ? 'Categorías de ingreso' : 'Categorías de egreso'}</h2>
             <p className="text-xs text-muted-foreground mt-0.5">Arrastra el ícono ⠿ para reordenar</p>
           </div>
           <button onClick={onClose} className="text-muted-foreground hover:text-muted-foreground text-xl leading-none">×</button>

@@ -26,6 +26,8 @@ interface Props {
   budgets: BudgetRow[]
   allCategories: Category[]
   actualByCategory: Record<string, number>
+  incomeCategories: Category[]
+  actualIncomeByCategory: Record<string, number>
   templates: Template[]
   userId: string
   selectedYear: number
@@ -38,6 +40,7 @@ const MONTHS_LONG = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','A
 
 export function BudgetsClient({
   budgets: initialBudgets, allCategories, actualByCategory,
+  incomeCategories, actualIncomeByCategory,
   templates: initialTemplates, userId, selectedYear, selectedMonth, baseCurrency,
 }: Props) {
   const supabase = createClient()
@@ -50,20 +53,35 @@ export function BudgetsClient({
   const isCurrentMonth = selectedYear === currentYear && selectedMonth === currentMonth
   const years = Array.from({ length: 5 }, (_, i) => currentYear - 3 + i)
 
-  const [budgets, setBudgets] = useState(initialBudgets)
-  const [allCats, setAllCats] = useState(allCategories)
-  const [templates, setTemplates] = useState(initialTemplates)
+  // Separar presupuestos por tipo al inicializar
+  const initialExpense = initialBudgets.filter(b => b.categories?.type !== 'income')
+  const initialIncome  = initialBudgets.filter(b => b.categories?.type === 'income')
+
+  const [budgets, setBudgets]           = useState(initialExpense)
+  const [incomeBudgets, setIncomeBudgets] = useState(initialIncome)
+  const [allCats, setAllCats]           = useState(allCategories)
+  const [allIncomeCats, setAllIncomeCats] = useState(incomeCategories)
+  const [templates, setTemplates]       = useState(initialTemplates)
+
   const [amounts, setAmounts] = useState<Record<string, string>>(() => {
     const map: Record<string, string> = {}
-    initialBudgets.forEach(b => { map[b.category_id] = b.amount.toString() })
+    initialExpense.forEach(b => { map[b.category_id] = b.amount.toString() })
+    return map
+  })
+  const [incomeAmounts, setIncomeAmounts] = useState<Record<string, string>>(() => {
+    const map: Record<string, string> = {}
+    initialIncome.forEach(b => { map[b.category_id] = b.amount.toString() })
     return map
   })
 
   const isMobile = useIsMobile()
-  const [isEditing, setIsEditing] = useState(false)
-  const [saving, setSaving] = useState<string | null>(null)
-  const [copyingPrev, setCopyingPrev] = useState(false)
-  const [showCatPanel, setShowCatPanel] = useState(false)
+  const [isEditing, setIsEditing]           = useState(false)
+  const [isEditingIncome, setIsEditingIncome] = useState(false)
+  const [saving, setSaving]                 = useState<string | null>(null)
+  const [savingIncome, setSavingIncome]     = useState<string | null>(null)
+  const [copyingPrev, setCopyingPrev]       = useState(false)
+  const [showCatPanel, setShowCatPanel]     = useState(false)
+  const [showIncomeCatPanel, setShowIncomeCatPanel] = useState(false)
 
   // Estado plantillas
   const [showTemplateModal, setShowTemplateModal] = useState(false)
@@ -72,11 +90,11 @@ export function BudgetsClient({
   const [showApplyMenu, setShowApplyMenu] = useState(false)
   const [applyingTemplate, setApplyingTemplate] = useState(false)
 
-  // Categorías ya en el presupuesto de este mes
-  const budgetedCatIds = new Set(budgets.map(b => b.category_id))
-
-  // Categorías disponibles para agregar (las que aún no están en este mes)
-  const availableToAdd = allCats.filter(c => !budgetedCatIds.has(c.id))
+  // Categorías disponibles para agregar en cada sección
+  const budgetedCatIds    = new Set(budgets.map(b => b.category_id))
+  const incomeBudgetedIds = new Set(incomeBudgets.map(b => b.category_id))
+  const availableToAdd       = allCats.filter(c => !budgetedCatIds.has(c.id))
+  const availableIncomeToAdd = allIncomeCats.filter(c => !incomeBudgetedIds.has(c.id))
 
   function changePeriod(year: number, month: number) {
     router.push(`/budgets?year=${year}&month=${month}`)
@@ -142,7 +160,51 @@ export function BudgetsClient({
     if (!error) {
       setBudgets([])
       setAmounts({})
+      setIncomeBudgets([])
+      setIncomeAmounts({})
     }
+  }
+
+  // ── Funciones de ingreso ──────────────────────────────────────────────────
+
+  async function saveIncomeBudget(categoryId: string) {
+    const val = parseFloat(incomeAmounts[categoryId] ?? '0')
+    if (isNaN(val) || val < 0) return
+    setSavingIncome(categoryId)
+    const existing = incomeBudgets.find(b => b.category_id === categoryId)
+    if (existing) {
+      await supabase.from('budgets').update({ amount: val }).eq('id', existing.id)
+    } else {
+      await supabase.from('budgets').insert({
+        user_id: userId, year: selectedYear, month: selectedMonth,
+        category_id: categoryId, amount: val,
+      })
+    }
+    setSavingIncome(null)
+  }
+
+  async function addIncomeCategoryToMonth(catId: string) {
+    const cat = allIncomeCats.find(c => c.id === catId)
+    if (!cat) return
+    const { data, error } = await supabase
+      .from('budgets')
+      .insert({ user_id: userId, year: selectedYear, month: selectedMonth, category_id: catId, amount: 0 })
+      .select('id, category_id, amount')
+      .single()
+    if (error) { console.error('addIncomeCategoryToMonth:', error.message); return }
+    if (data) {
+      const newRow = { ...data, categories: cat }
+      setIncomeBudgets(prev =>
+        [...prev, newRow as any].sort((a, b) => (a.categories?.sort_order ?? 0) - (b.categories?.sort_order ?? 0))
+      )
+      setIncomeAmounts(prev => ({ ...prev, [catId]: '0' }))
+    }
+  }
+
+  async function removeIncomeCategoryFromMonth(budgetId: string, categoryId: string) {
+    await supabase.from('budgets').delete().eq('id', budgetId)
+    setIncomeBudgets(prev => prev.filter(b => b.id !== budgetId))
+    setIncomeAmounts(prev => { const next = { ...prev }; delete next[categoryId]; return next })
   }
 
   async function copyPreviousMonth() {
@@ -154,9 +216,11 @@ export function BudgetsClient({
       .eq('user_id', userId).eq('year', prevYear).eq('month', prevMonth)
 
     if (prevBudgets && prevBudgets.length > 0) {
-      // Limpiar mes actual y copiar del anterior
+      // Limpiar mes actual (incluye ingresos) y copiar egresos del anterior
       await supabase.from('budgets').delete()
         .eq('user_id', userId).eq('year', selectedYear).eq('month', selectedMonth)
+      setIncomeBudgets([])
+      setIncomeAmounts({})
 
       const { data: inserted } = await supabase.from('budgets')
         .insert(prevBudgets.map(pb => ({
@@ -208,12 +272,14 @@ export function BudgetsClient({
     setApplyingTemplate(true)
     setShowApplyMenu(false)
 
-    // 1. Borrar todo el presupuesto del mes
+    // 1. Borrar todo el presupuesto del mes (incluye ingresos)
     await supabase.from('budgets')
       .delete()
       .eq('user_id', userId)
       .eq('year', selectedYear)
       .eq('month', selectedMonth)
+    setIncomeBudgets([])
+    setIncomeAmounts({})
 
     // 2. Insertar las categorías de la plantilla (solo las que aún existen)
     const validItems = template.items.filter(item => allCats.find(c => c.id === item.category_id))
@@ -256,8 +322,10 @@ export function BudgetsClient({
     setTemplates(prev => prev.filter(t => t.id !== id))
   }
 
-  const totalBudget = budgets.reduce((s, b) => s + (parseFloat(amounts[b.category_id] ?? '0') || 0), 0)
-  const totalActual = budgets.reduce((s, b) => s + (actualByCategory[b.category_id] ?? 0), 0)
+  const totalBudget  = budgets.reduce((s, b) => s + (parseFloat(amounts[b.category_id] ?? '0') || 0), 0)
+  const totalActual  = budgets.reduce((s, b) => s + (actualByCategory[b.category_id] ?? 0), 0)
+  const totalIncomeBudget = incomeBudgets.reduce((s, b) => s + (parseFloat(incomeAmounts[b.category_id] ?? '0') || 0), 0)
+  const totalActualIncome = incomeBudgets.reduce((s, b) => s + (actualIncomeByCategory[b.category_id] ?? 0), 0)
 
   return (
     <div className="space-y-6">
@@ -427,7 +495,200 @@ export function BudgetsClient({
         </button>
       </div>}
 
-      {/* Totales */}
+      {/* ── Sección de INGRESOS ── */}
+      <div className="grid grid-cols-3 gap-2 sm:gap-4">
+        {[
+          { label: 'Ingreso planificado', value: totalIncomeBudget, color: 'text-foreground' },
+          { label: 'Ingreso real', value: totalActualIncome, color: 'text-emerald-600' },
+          { label: 'Diferencia', value: totalActualIncome - totalIncomeBudget, color: totalActualIncome - totalIncomeBudget >= 0 ? 'text-emerald-600' : 'text-amber-600' },
+        ].map(card => (
+          <div key={card.label} className="rounded-xl border border-border bg-card p-3 sm:p-4 shadow-sm">
+            <p className="text-xs text-muted-foreground truncate">{card.label}</p>
+            <p className={`mt-1 text-base sm:text-xl font-bold truncate ${card.color}`}>{sym} {fmt(fromPen(card.value))}</p>
+          </div>
+        ))}
+      </div>
+
+      <div className="rounded-xl border border-border bg-card shadow-sm">
+        <div className="flex items-center justify-between px-4 py-3 border-b border-border">
+          <span className="text-sm font-semibold text-foreground">Ingresos planificados</span>
+          <div className="flex items-center gap-2">
+            {isEditingIncome && (
+              <button
+                onClick={() => setShowIncomeCatPanel(true)}
+                className="flex items-center gap-1 rounded-lg border border-border px-2 py-1.5 text-xs text-muted-foreground hover:bg-accent hover:text-primary hover:border-accent transition-colors"
+              >
+                <Settings2 className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline">Categorías</span>
+              </button>
+            )}
+            {isEditingIncome ? (
+              <button
+                onClick={() => setIsEditingIncome(false)}
+                className="flex items-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
+              >
+                <Check className="h-3.5 w-3.5" /> Listo
+              </button>
+            ) : (
+              <button
+                onClick={() => setIsEditingIncome(true)}
+                className="flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-xs text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+              >
+                <Pencil className="h-3.5 w-3.5" /> Editar
+              </button>
+            )}
+          </div>
+        </div>
+
+        {incomeBudgets.length > 0 ? (
+          <>
+            {/* Móvil: tarjetas de ingreso */}
+            <div className="sm:hidden divide-y divide-border">
+              {incomeBudgets.map(b => {
+                const budget = parseFloat(incomeAmounts[b.category_id] ?? '0') || 0
+                const actual = actualIncomeByCategory[b.category_id] ?? 0
+                const pct = budget > 0 ? Math.min((actual / budget) * 100, 100) : 0
+                const over = budget > 0 && actual > budget
+                return (
+                  <div key={b.id} className="px-4 py-3 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="font-medium text-foreground">{b.categories?.name}</span>
+                      {isEditingIncome && (
+                        <button onClick={() => removeIncomeCategoryFromMonth(b.id, b.category_id)} className="text-muted-foreground/40 hover:text-red-400 transition-colors p-1 -mr-1">✕</button>
+                      )}
+                    </div>
+                    <div className="flex items-center justify-between gap-3">
+                      {isEditingIncome ? (
+                        <div className="flex items-center gap-1">
+                          <span className="text-xs text-muted-foreground">{sym}</span>
+                          <input
+                            type="number" min="0" step="1"
+                            value={incomeAmounts[b.category_id] ?? ''}
+                            onChange={e => setIncomeAmounts(prev => ({ ...prev, [b.category_id]: e.target.value }))}
+                            onBlur={() => saveIncomeBudget(b.category_id)}
+                            onKeyDown={e => e.key === 'Enter' && saveIncomeBudget(b.category_id)}
+                            placeholder="0"
+                            className="w-24 rounded border border-border px-2 py-1 text-right text-sm focus:outline-none focus:ring-1 focus:ring-ring"
+                          />
+                          {savingIncome === b.category_id && <span className="text-xs text-muted-foreground">...</span>}
+                        </div>
+                      ) : (
+                        <span className="text-sm font-semibold text-foreground">
+                          {budget > 0 ? `${sym} ${fmt(fromPen(budget))}` : <span className="text-muted-foreground/50 font-normal text-xs">Sin monto</span>}
+                        </span>
+                      )}
+                      <span className="text-xs text-muted-foreground text-right">
+                        Real: <span className={`font-medium ${over ? 'text-amber-600' : 'text-emerald-600'}`}>{sym} {fmt(fromPen(actual))}</span>
+                      </span>
+                    </div>
+                    {budget > 0 && (
+                      <div className="space-y-1">
+                        <div className="h-2 w-full rounded-full bg-muted">
+                          <div className={`h-full rounded-full transition-all ${over ? 'bg-amber-400' : 'bg-emerald-500'}`} style={{ width: `${pct}%` }} />
+                        </div>
+                        <p className={`text-xs ${over ? 'text-amber-600' : 'text-muted-foreground'}`}>{Math.round(pct)}%</p>
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+
+            {/* Desktop: tabla de ingreso */}
+            <div className="hidden sm:block overflow-x-auto">
+              <table className="w-full text-sm table-fixed">
+                <thead>
+                  <tr className="border-b border-border text-left text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                    <th className="px-4 py-3 w-[22%]">Categoría</th>
+                    <th className="px-4 py-3 w-[20%] text-center">Planificado</th>
+                    <th className="px-4 py-3 w-[18%] text-center">Real</th>
+                    <th className="px-4 py-3">Progreso</th>
+                    {isEditingIncome && <th className="px-4 py-3 w-10"></th>}
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border">
+                  {incomeBudgets.map(b => {
+                    const budget = parseFloat(incomeAmounts[b.category_id] ?? '0') || 0
+                    const actual = actualIncomeByCategory[b.category_id] ?? 0
+                    const pct = budget > 0 ? Math.min((actual / budget) * 100, 100) : 0
+                    const over = budget > 0 && actual > budget
+                    return (
+                      <tr key={b.id} className="hover:bg-muted/50 transition-colors">
+                        <td className="px-4 py-3 font-medium text-foreground">{b.categories?.name}</td>
+                        <td className="px-4 py-3 text-center">
+                          {isEditingIncome ? (
+                            <div className="flex items-center justify-center gap-1">
+                              <span className="text-muted-foreground text-xs">{sym}</span>
+                              <input
+                                type="number" min="0" step="1"
+                                value={incomeAmounts[b.category_id] ?? ''}
+                                onChange={e => setIncomeAmounts(prev => ({ ...prev, [b.category_id]: e.target.value }))}
+                                onBlur={() => saveIncomeBudget(b.category_id)}
+                                onKeyDown={e => e.key === 'Enter' && saveIncomeBudget(b.category_id)}
+                                placeholder="0"
+                                className="w-24 rounded border border-border px-2 py-1 text-right text-sm focus:outline-none focus:ring-1 focus:ring-ring"
+                              />
+                              {savingIncome === b.category_id && <span className="text-xs text-muted-foreground">...</span>}
+                            </div>
+                          ) : (
+                            <span className={`font-semibold ${budget > 0 ? 'text-foreground' : 'text-muted-foreground/40'}`}>
+                              {budget > 0 ? `${sym} ${fmt(fromPen(budget))}` : '—'}
+                            </span>
+                          )}
+                        </td>
+                        <td className={`px-4 py-3 text-center font-medium ${over ? 'text-amber-600' : 'text-emerald-600'}`}>
+                          {sym} {fmt(fromPen(actual))}
+                        </td>
+                        <td className="px-4 py-3">
+                          {budget > 0 ? (
+                            <div className="space-y-1">
+                              <div className="h-2 w-full rounded-full bg-muted">
+                                <div className={`h-full rounded-full transition-all ${over ? 'bg-amber-400' : 'bg-emerald-500'}`} style={{ width: `${pct}%` }} />
+                              </div>
+                              <p className={`text-xs ${over ? 'text-amber-600' : 'text-muted-foreground'}`}>{Math.round(pct)}%</p>
+                            </div>
+                          ) : (
+                            <span className="text-xs text-muted-foreground/40">Sin monto</span>
+                          )}
+                        </td>
+                        {isEditingIncome && (
+                          <td className="px-4 py-3 text-center">
+                            <button onClick={() => removeIncomeCategoryFromMonth(b.id, b.category_id)} className="text-muted-foreground/30 hover:text-red-400 transition-colors">✕</button>
+                          </td>
+                        )}
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </>
+        ) : (
+          <div className="py-12 text-center">
+            <p className="text-sm text-muted-foreground">No hay ingresos en este presupuesto.</p>
+            <p className="text-xs text-muted-foreground mt-1">Pulsa <strong>Editar</strong> para agregar fuentes de ingreso.</p>
+          </div>
+        )}
+
+        {isEditingIncome && availableIncomeToAdd.length > 0 && (
+          <div className="border-t border-dashed border-border px-4 py-3 flex items-center gap-3">
+            <span className="text-xs text-muted-foreground shrink-0">+ Agregar:</span>
+            <div className="flex flex-wrap gap-2">
+              {availableIncomeToAdd.map(cat => (
+                <button
+                  key={cat.id}
+                  onClick={() => addIncomeCategoryToMonth(cat.id)}
+                  className="rounded-full border border-border bg-card px-3 py-1 text-xs text-muted-foreground hover:border-primary/40 hover:text-primary hover:bg-accent transition-colors"
+                >
+                  {cat.name}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* ── Sección de EGRESOS ── */}
       <div className="grid grid-cols-3 gap-2 sm:gap-4">
         {[
           { label: 'Presupuesto', value: totalBudget, color: 'text-foreground' },
@@ -441,12 +702,12 @@ export function BudgetsClient({
         ))}
       </div>
 
-      {/* Tabla / Tarjetas */}
+      {/* Tabla / Tarjetas de egresos */}
       <div className="rounded-xl border border-border bg-card shadow-sm">
 
         {/* Header del card: título + botón editar/listo */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-border">
-          <span className="text-sm font-semibold text-foreground">Categorías del mes</span>
+          <span className="text-sm font-semibold text-foreground">Egresos planificados</span>
           {budgets.length > 0 && (
             isEditing ? (
               <button
@@ -680,11 +941,12 @@ export function BudgetsClient({
         </div>
       )}
 
-      {/* Panel categorías */}
+      {/* Panel categorías de egreso */}
       {showCatPanel && (
         <CategoryPanel
           categories={allCats}
           userId={userId}
+          type="expense"
           onChange={updated => {
             setAllCats(updated)
             setBudgets(prev =>
@@ -694,6 +956,24 @@ export function BudgetsClient({
             )
           }}
           onClose={() => setShowCatPanel(false)}
+        />
+      )}
+
+      {/* Panel categorías de ingreso */}
+      {showIncomeCatPanel && (
+        <CategoryPanel
+          categories={allIncomeCats}
+          userId={userId}
+          type="income"
+          onChange={updated => {
+            setAllIncomeCats(updated)
+            setIncomeBudgets(prev =>
+              prev
+                .map(b => ({ ...b, categories: updated.find(c => c.id === b.category_id) ?? b.categories }))
+                .sort((a, b) => (a.categories?.sort_order ?? 0) - (b.categories?.sort_order ?? 0))
+            )
+          }}
+          onClose={() => setShowIncomeCatPanel(false)}
         />
       )}
     </div>

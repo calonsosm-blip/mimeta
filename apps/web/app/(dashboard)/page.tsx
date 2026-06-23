@@ -23,7 +23,7 @@ export default async function DashboardPage({ searchParams }: Props) {
 
   const [
     profileRes, balanceRes, recentRes, upcomingRes,
-    budgetTotalRes, expensesRes, cumulativeRes,
+    budgetTotalRes, expensesRes, cumulativeRes, projectedIncomeRes,
   ] = await Promise.all([
     supabase.from('profiles').select('display_name, plan, base_currency').eq('id', user!.id).single(),
     supabase.rpc('get_monthly_balance', { p_user_id: user!.id, p_year: year, p_month: month }),
@@ -62,10 +62,19 @@ export default async function DashboardPage({ searchParams }: Props) {
       .select('type, amount_pen')
       .eq('user_id', user!.id)
       .lte('date', dateTo),
+    // Presupuesto de ingresos del mes
+    supabase
+      .from('budgets')
+      .select('amount, categories!inner(type)')
+      .eq('user_id', user!.id)
+      .eq('year', year)
+      .eq('month', month)
+      .eq('categories.type', 'income'),
   ])
 
-  const balance     = balanceRes.data?.[0] ?? { income: 0, expenses: 0, balance: 0 }
-  const totalBudget = (budgetTotalRes.data ?? []).reduce((s, b) => s + b.amount, 0)
+  const balance          = balanceRes.data?.[0] ?? { income: 0, expenses: 0, balance: 0 }
+  const totalBudget      = (budgetTotalRes.data ?? []).reduce((s, b) => s + b.amount, 0)
+  const projectedIncome  = ((projectedIncomeRes.data ?? []) as any[]).reduce((s, b) => s + b.amount, 0)
 
   const cumulativeBalance = ((cumulativeRes.data ?? []) as any[]).reduce((sum, tx) => {
     return sum + (tx.type === 'income' ? tx.amount_pen : -tx.amount_pen)
@@ -96,6 +105,7 @@ export default async function DashboardPage({ searchParams }: Props) {
       isCurrentMonth={isCurrentMonth}
       expenseByCategory={expenseByCategory}
       cumulativeBalance={cumulativeBalance}
+      projectedIncome={projectedIncome}
     />
   )
 }
