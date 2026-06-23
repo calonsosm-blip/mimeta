@@ -4,8 +4,9 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { useCurrency } from '@/hooks/useCurrency'
+import { useIsMobile } from '@/hooks/useIsMobile'
 import { CategoryPanel } from './CategoryPanel'
-import { ArrowLeft, Bookmark, Check, ClipboardList, Pencil, Settings2, Trash2 } from 'lucide-react'
+import { ArrowLeft, Bookmark, Check, ChevronLeft, ChevronRight, ClipboardList, Pencil, Settings2, Trash2 } from 'lucide-react'
 
 interface Category { id: string; name: string; type: string; sort_order: number }
 interface BudgetRow {
@@ -58,6 +59,7 @@ export function BudgetsClient({
     return map
   })
 
+  const isMobile = useIsMobile()
   const [isEditing, setIsEditing] = useState(false)
   const [saving, setSaving] = useState<string | null>(null)
   const [copyingPrev, setCopyingPrev] = useState(false)
@@ -264,56 +266,76 @@ export function BudgetsClient({
         <h1 className="text-2xl font-bold text-foreground">Presupuesto</h1>
 
         {/* Navegación de período */}
-        <div className="flex items-center gap-1">
-          <button
-            onClick={prevMonth}
-            className="flex h-8 w-8 items-center justify-center rounded-lg border border-border bg-card text-muted-foreground hover:bg-muted hover:text-foreground/80 transition-colors shadow-sm"
-            title="Mes anterior"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-            </svg>
-          </button>
-
-          <select
-            value={selectedMonth}
-            onChange={e => changePeriod(selectedYear, parseInt(e.target.value))}
-            className="rounded-lg border border-border bg-card px-2 py-1.5 text-sm text-foreground/80 shadow-sm focus:outline-none focus:ring-2 focus:ring-ring"
-          >
-            {MONTHS_LONG.map((name, i) => (
-              <option key={i + 1} value={i + 1}>{name}</option>
-            ))}
-          </select>
-
-          <select
-            value={selectedYear}
-            onChange={e => changePeriod(parseInt(e.target.value), selectedMonth)}
-            className="rounded-lg border border-border bg-card px-2 py-1.5 text-sm text-foreground/80 shadow-sm focus:outline-none focus:ring-2 focus:ring-ring"
-          >
-            {years.map(y => (
-              <option key={y} value={y}>{y}</option>
-            ))}
-          </select>
-
-          <button
-            onClick={nextMonth}
-            className="flex h-8 w-8 items-center justify-center rounded-lg border border-border bg-card text-muted-foreground hover:bg-muted hover:text-foreground/80 transition-colors shadow-sm"
-            title="Mes siguiente"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-            </svg>
-          </button>
-
-          {!isCurrentMonth && (
-            <button
-              onClick={() => router.push('/budgets')}
-              className="ml-1 rounded-lg border border-accent bg-accent px-3 py-1.5 text-xs font-medium text-primary hover:bg-accent transition-colors shadow-sm"
-            >
-              Hoy
+        {isMobile ? (
+          <div className="flex items-center gap-1">
+            <button onClick={prevMonth} className="text-muted-foreground/60 hover:text-foreground transition-colors">
+              <ChevronLeft className="h-3.5 w-3.5" />
             </button>
-          )}
-        </div>
+            <div className="relative">
+              <span className="text-sm text-muted-foreground cursor-pointer">
+                {MONTHS_LONG[selectedMonth - 1]}
+              </span>
+              <select
+                value={selectedMonth}
+                onChange={e => changePeriod(selectedYear, parseInt(e.target.value))}
+                className="absolute inset-0 opacity-0 cursor-pointer w-full"
+              >
+                {MONTHS_LONG.map((name, i) => (
+                  <option key={i + 1} value={i + 1}>{name}</option>
+                ))}
+              </select>
+            </div>
+            <span className="text-muted-foreground/40 text-xs">·</span>
+            <div className="relative">
+              <span className="text-sm text-muted-foreground cursor-pointer">{selectedYear}</span>
+              <select
+                value={selectedYear}
+                onChange={e => changePeriod(parseInt(e.target.value), selectedMonth)}
+                className="absolute inset-0 opacity-0 cursor-pointer w-full"
+              >
+                {years.map(y => <option key={y} value={y}>{y}</option>)}
+              </select>
+            </div>
+            <button onClick={nextMonth} className="text-muted-foreground/60 hover:text-foreground transition-colors">
+              <ChevronRight className="h-3.5 w-3.5" />
+            </button>
+            {!isCurrentMonth && (
+              <button onClick={() => router.push('/budgets')} className="text-xs text-primary ml-0.5">hoy</button>
+            )}
+          </div>
+        ) : (
+          <div className="flex items-center gap-1">
+            <button onClick={prevMonth} className="flex h-8 w-8 items-center justify-center rounded-lg border border-border bg-card text-muted-foreground hover:bg-muted hover:text-foreground/80 transition-colors shadow-sm" title="Mes anterior">
+              <ChevronLeft className="h-4 w-4" />
+            </button>
+            <select
+              value={selectedMonth}
+              onChange={e => changePeriod(selectedYear, parseInt(e.target.value))}
+              className="rounded-lg border border-border bg-card px-2 py-1.5 text-sm text-foreground/80 shadow-sm focus:outline-none focus:ring-2 focus:ring-ring"
+            >
+              {MONTHS_LONG.map((name, i) => (
+                <option key={i + 1} value={i + 1}>{name}</option>
+              ))}
+            </select>
+            <select
+              value={selectedYear}
+              onChange={e => changePeriod(parseInt(e.target.value), selectedMonth)}
+              className="rounded-lg border border-border bg-card px-2 py-1.5 text-sm text-foreground/80 shadow-sm focus:outline-none focus:ring-2 focus:ring-ring"
+            >
+              {years.map(y => (
+                <option key={y} value={y}>{y}</option>
+              ))}
+            </select>
+            <button onClick={nextMonth} className="flex h-8 w-8 items-center justify-center rounded-lg border border-border bg-card text-muted-foreground hover:bg-muted hover:text-foreground/80 transition-colors shadow-sm" title="Mes siguiente">
+              <ChevronRight className="h-4 w-4" />
+            </button>
+            {!isCurrentMonth && (
+              <button onClick={() => router.push('/budgets')} className="ml-1 rounded-lg border border-accent bg-accent px-3 py-1.5 text-xs font-medium text-primary hover:bg-accent transition-colors shadow-sm">
+                Hoy
+              </button>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Header fila 2: acciones — solo en modo edición */}
