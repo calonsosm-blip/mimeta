@@ -33,7 +33,7 @@ const FREQ_LABELS: Record<string, string> = {
 
 function daysUntil(dateStr: string) {
   const today = new Date(); today.setHours(0,0,0,0)
-  const due = new Date(dateStr + 'T12:00:00')
+  const due = new Date(dateStr + 'T00:00:00')
   return Math.round((due.getTime() - today.getTime()) / 86400000)
 }
 
