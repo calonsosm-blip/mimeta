@@ -246,15 +246,29 @@ export function DashboardClient({
           {upcomingReminders.length === 0 ? (
             <p className="text-sm text-muted-foreground">Aún no tienes alertas de pago configuradas.</p>
           ) : (
-            <ul className="space-y-3">
+            <ul className="space-y-1">
               {upcomingReminders.map((r, i) => {
                 const d = new Date(r.next_due_date + 'T12:00:00')
                 const day = d.getDate()
-                const mon = d.toLocaleDateString('es-PE', { month: 'short' })
+                const mon = d.toLocaleDateString('es', { month: 'short' })
+                const now = new Date()
+                now.setHours(12, 0, 0, 0)
+                const daysLeft = Math.round((d.getTime() - now.getTime()) / 86_400_000)
+                const urgencyLabel = daysLeft === 0 ? 'Hoy' : daysLeft === 1 ? 'Mañana' : daysLeft <= 3 ? `En ${daysLeft} días` : null
+                const circleClass = daysLeft === 0
+                  ? 'bg-red-100 dark:bg-red-950/50 text-red-700 dark:text-red-400'
+                  : daysLeft <= 2
+                  ? 'bg-orange-100 dark:bg-orange-950/50 text-orange-700 dark:text-orange-400'
+                  : 'bg-amber-100 dark:bg-amber-950/50 text-amber-700 dark:text-amber-400'
+                const badgeClass = daysLeft === 0
+                  ? 'bg-red-100 dark:bg-red-950/50 text-red-700 dark:text-red-400'
+                  : daysLeft <= 2
+                  ? 'bg-orange-100 dark:bg-orange-950/50 text-orange-700 dark:text-orange-400'
+                  : 'bg-amber-100 dark:bg-amber-950/50 text-amber-700 dark:text-amber-400'
                 return (
-                  <li key={i} className="flex items-center justify-between">
+                  <li key={i} className={`flex items-center justify-between rounded-lg px-2 py-2 -mx-2 transition-colors ${urgencyLabel ? 'bg-red-50/60 dark:bg-red-950/10' : 'hover:bg-muted/40'}`}>
                     <div className="flex items-center gap-3">
-                      <span className="flex h-8 w-8 items-center justify-center rounded-full bg-amber-100 dark:bg-amber-950/50 text-xs font-bold text-amber-700 dark:text-amber-400">
+                      <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-bold ${circleClass}`}>
                         {day}
                       </span>
                       <div>
@@ -262,9 +276,16 @@ export function DashboardClient({
                         <p className="text-[11px] text-muted-foreground">{mon}</p>
                       </div>
                     </div>
-                    <span className="text-sm font-medium text-foreground">
-                      {invisible ? '••••' : `${r.currency === 'USD' ? '$' : 'S/'} ${fmt(r.amount)}`}
-                    </span>
+                    <div className="flex items-center gap-2 shrink-0">
+                      {urgencyLabel && (
+                        <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${badgeClass}`}>
+                          {urgencyLabel}
+                        </span>
+                      )}
+                      <span className="text-sm font-medium text-foreground">
+                        {invisible ? '••••' : `${r.currency === 'USD' ? '$' : 'S/'} ${fmt(r.amount)}`}
+                      </span>
+                    </div>
                   </li>
                 )
               })}
