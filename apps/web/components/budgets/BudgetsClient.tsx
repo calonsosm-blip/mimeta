@@ -471,7 +471,7 @@ export function BudgetsClient({
                         </button>
                       )}
                     </div>
-                    <div className="flex items-center gap-3 flex-wrap">
+                    <div className="flex items-center justify-between gap-3">
                       {isEditing ? (
                         <div className="flex items-center gap-1">
                           <span className="text-xs text-muted-foreground">{sym}</span>
@@ -491,7 +491,7 @@ export function BudgetsClient({
                           {budget > 0 ? `${sym} ${fmt(fromPen(budget))}` : <span className="text-muted-foreground/50 font-normal text-xs">Sin monto</span>}
                         </span>
                       )}
-                      <span className="text-xs text-muted-foreground">
+                      <span className="text-xs text-muted-foreground text-right">
                         Real: <span className={`font-medium ${over ? 'text-red-500' : 'text-foreground/80'}`}>{sym} {fmt(fromPen(actual))}</span>
                       </span>
                     </div>
