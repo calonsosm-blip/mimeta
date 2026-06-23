@@ -240,9 +240,12 @@ export function DashboardClient({
 
         {/* Próximos recordatorios */}
         <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
-          <h2 className="text-sm font-semibold text-foreground mb-4">
-            {isCurrentMonth ? 'Próximos pagos' : 'Recordatorios del mes'}
-          </h2>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-sm font-semibold text-foreground">
+              {isCurrentMonth ? 'Próximos pagos' : 'Recordatorios del mes'}
+            </h2>
+            <a href="/planned-payments" className="text-xs text-primary hover:underline">Ver todas</a>
+          </div>
           {upcomingReminders.length === 0 ? (
             <p className="text-sm text-muted-foreground">Aún no tienes alertas de pago configuradas.</p>
           ) : (

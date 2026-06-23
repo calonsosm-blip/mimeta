@@ -41,9 +41,9 @@ export default async function DashboardPage({ searchParams }: Props) {
       .select('concept, next_due_date, amount, currency')
       .eq('user_id', user!.id)
       .eq('is_active', true)
-      .gte('next_due_date', new Date().toISOString().split('T')[0])
+      .gte('next_due_date', new Date().toLocaleString('en-CA', { timeZone: 'America/Lima' }).slice(0, 10))
       .order('next_due_date')
-      .limit(4),
+      .limit(5),
     supabase
       .from('budgets')
       .select('amount')
