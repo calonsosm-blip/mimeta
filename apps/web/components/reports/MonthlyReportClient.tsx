@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid,
-  Tooltip, Legend, ResponsiveContainer,
+  Tooltip, Legend, ResponsiveContainer, ReferenceLine, Cell,
 } from 'recharts'
 import { ChevronDown, FileSpreadsheet, FileText, SlidersHorizontal, X } from 'lucide-react'
 import { useCurrency } from '@/hooks/useCurrency'
@@ -59,6 +59,8 @@ export function MonthlyReportClient({ transactions, mode, year, month, from, to,
   const [draftMonth,  setDraftMonth]  = useState(month)
   const [draftFrom,   setDraftFrom]   = useState(from)
   const [draftTo,     setDraftTo]     = useState(to)
+
+  const [balanceView, setBalanceView] = useState<'monthly' | 'cumulative'>('monthly')
 
   // Export dropdown
   const [exportOpen, setExportOpen] = useState(false)
@@ -125,6 +127,27 @@ export function MonthlyReportClient({ transactions, mode, year, month, from, to,
     return Array.from(map.entries()).map(([label, v]) => ({ label, ...v }))
   }, [transactions, mode, year, month])
 
+  // Ingresos por categoría
+  const byIncomeCategory = useMemo(() => {
+    const map = new Map<string, number>()
+    transactions.filter(t => t.type === 'income').forEach(t => {
+      const cat = t.categories?.name ?? 'Sin categoría'
+      map.set(cat, (map.get(cat) ?? 0) + t.amount_pen)
+    })
+    return Array.from(map.entries()).sort((a, b) => b[1] - a[1]).map(([name, total]) => ({ name, total }))
+  }, [transactions])
+
+  // Evolución del balance (solo modo anual)
+  const balanceEvolution = useMemo(() => {
+    if (mode !== 'annual') return []
+    let cumulative = 0
+    return chartData.map(d => {
+      const balance = d.income - d.expenses
+      cumulative += balance
+      return { label: d.label, balance, cumulative, hasData: d.income > 0 || d.expenses > 0 }
+    })
+  }, [chartData, mode])
+
   // Gastos por categoría
   const byCategory = useMemo(() => {
     const map = new Map<string, number>()
@@ -139,6 +162,7 @@ export function MonthlyReportClient({ transactions, mode, year, month, from, to,
   const totalExpenses = transactions.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount_pen, 0)
   const totalBalance  = totalIncome - totalExpenses
   const totalCatSpend = byCategory.reduce((s, c) => s + c.total, 0)
+  const totalIncomeCat = byIncomeCategory.reduce((s, c) => s + c.total, 0)
   const years         = Array.from({ length: 5 }, (_, i) => currentYear - i)
 
   const sortedTx = [...transactions].sort((a, b) => a.date.localeCompare(b.date))
@@ -451,9 +475,9 @@ export function MonthlyReportClient({ transactions, mode, year, month, from, to,
                   tickFormatter={v => `S/${fmtShort(v)}`} width={60}
                 />
                 <Tooltip
-                  formatter={(value: number, name: string) => [
-                    `${sym} ${fmt(fromPen(value))}`,
-                    name === 'income' ? 'Ingresos' : 'Egresos',
+                  formatter={(value, name) => [
+                    `${sym} ${fmt(fromPen(Number(value)))}`,
+                    String(name) === 'income' ? 'Ingresos' : 'Egresos',
                   ]}
                   contentStyle={{
                     fontSize: 12, borderRadius: 8,
@@ -470,6 +494,56 @@ export function MonthlyReportClient({ transactions, mode, year, month, from, to,
           </div>
         )}
       </div>
+
+      {/* Evolución del balance — solo modo anual */}
+      {mode === 'annual' && transactions.length > 0 && (
+        <div className="rounded-xl border border-border bg-card p-4 sm:p-6 shadow-sm">
+          <div className="flex items-center justify-between mb-5">
+            <div>
+              <h2 className="text-sm font-semibold text-foreground">Evolución del balance {year}</h2>
+              <p className="text-xs text-muted-foreground mt-0.5">Balance mensual (ingresos − egresos)</p>
+            </div>
+            <div className="flex rounded-lg border border-border overflow-hidden text-xs">
+              <button
+                onClick={() => setBalanceView('monthly')}
+                className={`px-3 py-1.5 transition-colors ${balanceView === 'monthly' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:bg-muted'}`}
+              >
+                Mensual
+              </button>
+              <button
+                onClick={() => setBalanceView('cumulative')}
+                className={`px-3 py-1.5 transition-colors ${balanceView === 'cumulative' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:bg-muted'}`}
+              >
+                Acumulado
+              </button>
+            </div>
+          </div>
+          <div className="h-56 sm:h-72">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={balanceEvolution} margin={{ top: 4, right: 4, left: 0, bottom: 0 }} barSize={14}>
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
+                <XAxis dataKey="label" tick={{ fontSize: 10, fill: 'var(--muted-foreground)' }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fontSize: 11, fill: 'var(--muted-foreground)' }} axisLine={false} tickLine={false}
+                  tickFormatter={v => `S/${fmtShort(v)}`} width={60} />
+                <ReferenceLine y={0} stroke="var(--border)" strokeWidth={1.5} />
+                <Tooltip
+                  formatter={(value) => [`${sym} ${fmt(fromPen(Number(value)))}`, balanceView === 'monthly' ? 'Balance' : 'Acumulado']}
+                  contentStyle={{ fontSize: 12, borderRadius: 8, border: '1px solid var(--border)', background: 'var(--card)', color: 'var(--foreground)' }}
+                />
+                <Bar dataKey={balanceView === 'monthly' ? 'balance' : 'cumulative'} radius={[4, 4, 0, 0]}>
+                  {balanceEvolution.map((entry, i) => (
+                    <Cell
+                      key={i}
+                      fill={!entry.hasData ? 'var(--muted)' : (balanceView === 'monthly' ? entry.balance : entry.cumulative) >= 0 ? 'var(--brand)' : '#ef4444'}
+                      opacity={entry.hasData ? 1 : 0.4}
+                    />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+      )}
 
       {/* Gastos por categoría */}
       {byCategory.length > 0 && (
@@ -500,6 +574,40 @@ export function MonthlyReportClient({ transactions, mode, year, month, from, to,
             <div className="flex justify-between text-sm font-semibold text-foreground">
               <span>Total egresos</span>
               <span>{sym} {fmt(fromPen(totalExpenses))}</span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Ingresos por fuente */}
+      {byIncomeCategory.length > 0 && (
+        <div className="rounded-xl border border-border bg-card shadow-sm">
+          <div className="px-4 sm:px-6 py-4 border-b border-border">
+            <h2 className="text-sm font-semibold text-foreground">Ingresos por fuente</h2>
+          </div>
+          <div className="divide-y divide-border">
+            {byIncomeCategory.map(({ name, total }) => {
+              const pct = totalIncomeCat > 0 ? (total / totalIncomeCat) * 100 : 0
+              return (
+                <div key={name} className="flex items-center gap-4 px-4 sm:px-6 py-3">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-sm font-medium text-foreground truncate">{name}</span>
+                      <span className="text-sm font-semibold text-foreground ml-4 shrink-0">{sym} {fmt(fromPen(total))}</span>
+                    </div>
+                    <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden">
+                      <div className="h-full rounded-full bg-emerald-500 transition-all" style={{ width: `${pct}%` }} />
+                    </div>
+                  </div>
+                  <span className="text-xs text-muted-foreground shrink-0 w-10 text-right">{pct.toFixed(1)}%</span>
+                </div>
+              )
+            })}
+          </div>
+          <div className="px-4 sm:px-6 py-3 border-t border-border bg-muted/30 rounded-b-xl">
+            <div className="flex justify-between text-sm font-semibold text-foreground">
+              <span>Total ingresos</span>
+              <span>{sym} {fmt(fromPen(totalIncome))}</span>
             </div>
           </div>
         </div>
