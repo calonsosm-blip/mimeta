@@ -538,8 +538,8 @@ export function BudgetsClient({
               <thead>
                 <tr className="border-b border-border text-left text-xs font-medium text-muted-foreground uppercase tracking-wide">
                   <th className="px-4 py-3 w-[22%]">Categoría</th>
-                  <th className="px-4 py-3 w-[20%] text-right">Presupuesto</th>
-                  <th className="px-4 py-3 w-[18%] text-right">Real</th>
+                  <th className="px-4 py-3 w-[20%] text-center">Presupuesto</th>
+                  <th className="px-4 py-3 w-[18%] text-center">Real</th>
                   <th className="px-4 py-3">Progreso</th>
                   {isEditing && <th className="px-4 py-3 w-10"></th>}
                 </tr>
@@ -555,9 +555,9 @@ export function BudgetsClient({
                   return (
                     <tr key={b.id} className="hover:bg-muted/50 transition-colors group">
                       <td className="px-4 py-3 font-medium text-foreground">{b.categories?.name}</td>
-                      <td className="px-4 py-3 text-right">
+                      <td className="px-4 py-3 text-center">
                         {isEditing ? (
-                          <div className="flex items-center justify-end gap-1">
+                          <div className="flex items-center justify-center gap-1">
                             <span className="text-muted-foreground text-xs">{sym}</span>
                             <input
                               type="number" min="0" step="1"
@@ -576,7 +576,7 @@ export function BudgetsClient({
                           </span>
                         )}
                       </td>
-                      <td className={`px-4 py-3 text-right font-medium ${over ? 'text-red-500' : 'text-foreground/80'}`}>
+                      <td className={`px-4 py-3 text-center font-medium ${over ? 'text-red-500' : 'text-foreground/80'}`}>
                         {sym} {fmt(fromPen(actual))}
                       </td>
                       <td className="px-4 py-3">
