@@ -534,13 +534,13 @@ export function BudgetsClient({
 
             {/* Desktop: tabla */}
             <div className="hidden sm:block overflow-x-auto">
-            <table className="w-full text-sm">
+            <table className="w-full text-sm table-fixed">
               <thead>
                 <tr className="border-b border-border text-left text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                  <th className="px-4 py-3">Categoría</th>
-                  <th className="px-4 py-3 w-36 text-right">Presupuesto</th>
-                  <th className="px-4 py-3 w-32 text-right">Real</th>
-                  <th className="px-4 py-3 w-48">Progreso</th>
+                  <th className="px-4 py-3 w-[22%]">Categoría</th>
+                  <th className="px-4 py-3 w-[20%] text-right">Presupuesto</th>
+                  <th className="px-4 py-3 w-[18%] text-right">Real</th>
+                  <th className="px-4 py-3">Progreso</th>
                   {isEditing && <th className="px-4 py-3 w-10"></th>}
                 </tr>
               </thead>
