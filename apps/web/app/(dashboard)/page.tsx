@@ -46,10 +46,11 @@ export default async function DashboardPage({ searchParams }: Props) {
       .limit(5),
     supabase
       .from('budgets')
-      .select('amount')
+      .select('amount, categories!inner(type)')
       .eq('user_id', user!.id)
       .eq('year', year)
-      .eq('month', month),
+      .eq('month', month)
+      .eq('categories.type', 'expense'),
     supabase
       .from('transactions')
       .select('amount_pen, categories(name)')
