@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { useCurrency } from '@/hooks/useCurrency'
 import { CategoryPanel } from './CategoryPanel'
-import { ArrowLeft, Bookmark, ClipboardList, Settings2, Trash2 } from 'lucide-react'
+import { ArrowLeft, Bookmark, Check, ClipboardList, Pencil, Settings2, Trash2 } from 'lucide-react'
 
 interface Category { id: string; name: string; type: string; sort_order: number }
 interface BudgetRow {
@@ -58,6 +58,7 @@ export function BudgetsClient({
     return map
   })
 
+  const [isEditing, setIsEditing] = useState(false)
   const [saving, setSaving] = useState<string | null>(null)
   const [copyingPrev, setCopyingPrev] = useState(false)
   const [showCatPanel, setShowCatPanel] = useState(false)
@@ -315,8 +316,8 @@ export function BudgetsClient({
         </div>
       </div>
 
-      {/* Header fila 2: acciones */}
-      <div className="flex items-center gap-1 sm:gap-2">
+      {/* Header fila 2: acciones — solo en modo edición */}
+      {isEditing && <div className="flex items-center gap-1 sm:gap-2">
         {/* Copiar mes anterior */}
         <button
           onClick={copyPreviousMonth}
@@ -402,7 +403,7 @@ export function BudgetsClient({
           <Settings2 className="h-4 w-4 shrink-0" />
           <span className="hidden sm:inline">Categorías</span>
         </button>
-      </div>
+      </div>}
 
       {/* Totales */}
       <div className="grid grid-cols-3 gap-2 sm:gap-4">
@@ -420,6 +421,31 @@ export function BudgetsClient({
 
       {/* Tabla / Tarjetas */}
       <div className="rounded-xl border border-border bg-card shadow-sm">
+
+        {/* Header del card: título + botón editar/listo */}
+        <div className="flex items-center justify-between px-4 py-3 border-b border-border">
+          <span className="text-sm font-semibold text-foreground">Categorías del mes</span>
+          {budgets.length > 0 && (
+            isEditing ? (
+              <button
+                onClick={() => setIsEditing(false)}
+                className="flex items-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
+              >
+                <Check className="h-3.5 w-3.5" />
+                Listo
+              </button>
+            ) : (
+              <button
+                onClick={() => setIsEditing(true)}
+                className="flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-xs text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+              >
+                <Pencil className="h-3.5 w-3.5" />
+                Editar
+              </button>
+            )
+          )}
+        </div>
+
         {budgets.length > 0 ? (
           <>
             {/* Móvil: tarjetas */}
@@ -435,28 +461,36 @@ export function BudgetsClient({
                   <div key={b.id} className="px-4 py-3 space-y-2">
                     <div className="flex items-center justify-between">
                       <span className="font-medium text-foreground">{b.categories?.name}</span>
-                      <button
-                        onClick={() => removeCategoryFromMonth(b.id, b.category_id)}
-                        className="text-gray-300 hover:text-red-400 transition-colors p-1 -mr-1"
-                        title="Quitar del mes"
-                      >
-                        ✕
-                      </button>
+                      {isEditing && (
+                        <button
+                          onClick={() => removeCategoryFromMonth(b.id, b.category_id)}
+                          className="text-muted-foreground/40 hover:text-red-400 transition-colors p-1 -mr-1"
+                          title="Quitar del mes"
+                        >
+                          ✕
+                        </button>
+                      )}
                     </div>
                     <div className="flex items-center gap-3 flex-wrap">
-                      <div className="flex items-center gap-1">
-                        <span className="text-xs text-muted-foreground">{sym}</span>
-                        <input
-                          type="number" min="0" step="1"
-                          value={amounts[b.category_id] ?? ''}
-                          onChange={e => setAmounts(prev => ({ ...prev, [b.category_id]: e.target.value }))}
-                          onBlur={() => saveBudget(b.category_id)}
-                          onKeyDown={e => e.key === 'Enter' && saveBudget(b.category_id)}
-                          placeholder="0"
-                          className="w-24 rounded border border-border px-2 py-1 text-right text-sm focus:outline-none focus:ring-1 focus:ring-ring"
-                        />
-                        {saving === b.category_id && <span className="text-xs text-muted-foreground">...</span>}
-                      </div>
+                      {isEditing ? (
+                        <div className="flex items-center gap-1">
+                          <span className="text-xs text-muted-foreground">{sym}</span>
+                          <input
+                            type="number" min="0" step="1"
+                            value={amounts[b.category_id] ?? ''}
+                            onChange={e => setAmounts(prev => ({ ...prev, [b.category_id]: e.target.value }))}
+                            onBlur={() => saveBudget(b.category_id)}
+                            onKeyDown={e => e.key === 'Enter' && saveBudget(b.category_id)}
+                            placeholder="0"
+                            className="w-24 rounded border border-border px-2 py-1 text-right text-sm focus:outline-none focus:ring-1 focus:ring-ring"
+                          />
+                          {saving === b.category_id && <span className="text-xs text-muted-foreground">...</span>}
+                        </div>
+                      ) : (
+                        <span className="text-sm font-semibold text-foreground">
+                          {budget > 0 ? `${sym} ${fmt(fromPen(budget))}` : <span className="text-muted-foreground/50 font-normal text-xs">Sin monto</span>}
+                        </span>
+                      )}
                       <span className="text-xs text-muted-foreground">
                         Real: <span className={`font-medium ${over ? 'text-red-500' : 'text-foreground/80'}`}>{sym} {fmt(fromPen(actual))}</span>
                       </span>
@@ -470,9 +504,7 @@ export function BudgetsClient({
                           {Math.round(pct)}%{over ? ' — excedido' : ''}
                         </p>
                       </div>
-                    ) : (
-                      <span className="text-xs text-gray-300">Sin monto asignado</span>
-                    )}
+                    ) : null}
                   </div>
                 )
               })}
@@ -487,7 +519,7 @@ export function BudgetsClient({
                   <th className="px-4 py-3 text-right">Presupuesto</th>
                   <th className="px-4 py-3 text-right">Real</th>
                   <th className="px-4 py-3">Progreso</th>
-                  <th className="px-4 py-3 w-8"></th>
+                  {isEditing && <th className="px-4 py-3 w-8"></th>}
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
@@ -499,22 +531,28 @@ export function BudgetsClient({
                   const warn = budget > 0 && pct >= 80 && !over
 
                   return (
-                    <tr key={b.id} className="hover:bg-muted transition-colors group">
+                    <tr key={b.id} className="hover:bg-muted/50 transition-colors group">
                       <td className="px-4 py-3 font-medium text-foreground">{b.categories?.name}</td>
                       <td className="px-4 py-3 text-right">
-                        <div className="flex items-center justify-end gap-1">
-                          <span className="text-muted-foreground text-xs">{sym}</span>
-                          <input
-                            type="number" min="0" step="1"
-                            value={amounts[b.category_id] ?? ''}
-                            onChange={e => setAmounts(prev => ({ ...prev, [b.category_id]: e.target.value }))}
-                            onBlur={() => saveBudget(b.category_id)}
-                            onKeyDown={e => e.key === 'Enter' && saveBudget(b.category_id)}
-                            placeholder="0"
-                            className="w-24 rounded border border-border px-2 py-1 text-right text-sm focus:outline-none focus:ring-1 focus:ring-ring"
-                          />
-                          {saving === b.category_id && <span className="text-xs text-muted-foreground">...</span>}
-                        </div>
+                        {isEditing ? (
+                          <div className="flex items-center justify-end gap-1">
+                            <span className="text-muted-foreground text-xs">{sym}</span>
+                            <input
+                              type="number" min="0" step="1"
+                              value={amounts[b.category_id] ?? ''}
+                              onChange={e => setAmounts(prev => ({ ...prev, [b.category_id]: e.target.value }))}
+                              onBlur={() => saveBudget(b.category_id)}
+                              onKeyDown={e => e.key === 'Enter' && saveBudget(b.category_id)}
+                              placeholder="0"
+                              className="w-24 rounded border border-border px-2 py-1 text-right text-sm focus:outline-none focus:ring-1 focus:ring-ring"
+                            />
+                            {saving === b.category_id && <span className="text-xs text-muted-foreground">...</span>}
+                          </div>
+                        ) : (
+                          <span className={`font-semibold ${budget > 0 ? 'text-foreground' : 'text-muted-foreground/40'}`}>
+                            {budget > 0 ? `${sym} ${fmt(fromPen(budget))}` : '—'}
+                          </span>
+                        )}
                       </td>
                       <td className={`px-4 py-3 text-right font-medium ${over ? 'text-red-500' : 'text-foreground/80'}`}>
                         {sym} {fmt(fromPen(actual))}
@@ -530,18 +568,20 @@ export function BudgetsClient({
                             </p>
                           </div>
                         ) : (
-                          <span className="text-xs text-gray-300">Sin monto</span>
+                          <span className="text-xs text-muted-foreground/40">Sin monto</span>
                         )}
                       </td>
-                      <td className="px-4 py-3 text-center">
-                        <button
-                          onClick={() => removeCategoryFromMonth(b.id, b.category_id)}
-                          className="text-gray-200 hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100"
-                          title="Quitar del mes"
-                        >
-                          ✕
-                        </button>
-                      </td>
+                      {isEditing && (
+                        <td className="px-4 py-3 text-center">
+                          <button
+                            onClick={() => removeCategoryFromMonth(b.id, b.category_id)}
+                            className="text-muted-foreground/30 hover:text-red-400 transition-colors"
+                            title="Quitar del mes"
+                          >
+                            ✕
+                          </button>
+                        </td>
+                      )}
                     </tr>
                   )
                 })}
@@ -552,20 +592,20 @@ export function BudgetsClient({
         ) : (
           <div className="py-12 text-center">
             <p className="text-sm text-muted-foreground">No hay categorías en este presupuesto.</p>
-            <p className="text-xs text-muted-foreground mt-1">Agrega categorías desde abajo o aplica una plantilla.</p>
+            <p className="text-xs text-muted-foreground mt-1">Pulsa <strong>Editar</strong> y agrega categorías o aplica una plantilla.</p>
           </div>
         )}
 
-        {/* Agregar categoría al mes */}
-        {availableToAdd.length > 0 && (
+        {/* Agregar categoría al mes — solo en modo edición */}
+        {isEditing && availableToAdd.length > 0 && (
           <div className="border-t border-dashed border-border px-4 py-3 flex items-center gap-3">
-            <span className="text-xs text-muted-foreground shrink-0">+ Agregar al mes:</span>
+            <span className="text-xs text-muted-foreground shrink-0">+ Agregar:</span>
             <div className="flex flex-wrap gap-2">
               {availableToAdd.map(cat => (
                 <button
                   key={cat.id}
                   onClick={() => addCategoryToMonth(cat.id)}
-                  className="rounded-full border border-border bg-card px-3 py-1 text-xs text-muted-foreground hover:border-indigo-300 hover:text-primary hover:bg-accent transition-colors"
+                  className="rounded-full border border-border bg-card px-3 py-1 text-xs text-muted-foreground hover:border-primary/40 hover:text-primary hover:bg-accent transition-colors"
                 >
                   {cat.name}
                 </button>
@@ -574,13 +614,6 @@ export function BudgetsClient({
           </div>
         )}
       </div>
-
-      <p className="text-xs text-muted-foreground hidden sm:block">
-        Haz clic en el monto para editarlo · pasa el mouse sobre una fila para quitarla del mes (✕) · las plantillas guardan la estructura completa del mes actual.
-      </p>
-      <p className="text-xs text-muted-foreground sm:hidden">
-        Edita el monto y presiona Enter para guardar · toca ✕ para quitar una categoría del mes.
-      </p>
 
       {/* Modal guardar plantilla */}
       {showTemplateModal && (
