@@ -11,14 +11,14 @@ export default async function DashboardPage({ searchParams }: Props) {
 
   const params = await searchParams
   // Fecha actual en zona horaria de Lima (UTC-5) para evitar desfase de día
-  const limaStr  = new Date().toLocaleString('en-CA', { timeZone: 'America/Lima' })
-  const limaDate = new Date(limaStr)
-  const year  = parseInt(params.year  ?? '') || limaDate.getFullYear()
-  const month = parseInt(params.month ?? '') || limaDate.getMonth() + 1
-  const isCurrentMonth = year === limaDate.getFullYear() && month === limaDate.getMonth() + 1
-  const isFutureMonth  = year > limaDate.getFullYear() || (year === limaDate.getFullYear() && month > limaDate.getMonth() + 1)
+  const limaDateStr = new Date().toLocaleString('en-CA', { timeZone: 'America/Lima' }).slice(0, 10)
+  const [limaYear, limaMonth, limaDay] = limaDateStr.split('-').map(Number)
+  const year  = parseInt(params.year  ?? '') || limaYear
+  const month = parseInt(params.month ?? '') || limaMonth
+  const isCurrentMonth = year === limaYear && month === limaMonth
+  const isFutureMonth  = year > limaYear || (year === limaYear && month > limaMonth)
   const daysInMonth = new Date(year, month, 0).getDate()
-  const today = isCurrentMonth ? limaDate.getDate() : isFutureMonth ? 0 : daysInMonth
+  const today = isCurrentMonth ? limaDay : isFutureMonth ? 0 : daysInMonth
 
   const dateFrom = `${year}-${String(month).padStart(2, '0')}-01`
   const dateTo   = `${year}-${String(month).padStart(2, '0')}-${String(daysInMonth).padStart(2, '0')}`
