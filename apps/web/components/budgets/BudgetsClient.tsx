@@ -418,20 +418,12 @@ export function BudgetsClient({
         ))}
       </div>
 
-      {/* Tabla */}
-      <div className="rounded-xl border border-border bg-card shadow-sm overflow-hidden">
+      {/* Tabla / Tarjetas */}
+      <div className="rounded-xl border border-border bg-card shadow-sm">
         {budgets.length > 0 ? (
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-border text-left text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                <th className="px-4 py-3">Categoría</th>
-                <th className="px-4 py-3 text-right">Presupuesto</th>
-                <th className="px-4 py-3 text-right">Real</th>
-                <th className="px-4 py-3">Progreso</th>
-                <th className="px-4 py-3 w-8"></th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border">
+          <>
+            {/* Móvil: tarjetas */}
+            <div className="sm:hidden divide-y divide-border">
               {budgets.map(b => {
                 const budget = parseFloat(amounts[b.category_id] ?? '0') || 0
                 const actual = actualByCategory[b.category_id] ?? 0
@@ -440,11 +432,20 @@ export function BudgetsClient({
                 const warn = budget > 0 && pct >= 80 && !over
 
                 return (
-                  <tr key={b.id} className="hover:bg-muted transition-colors group">
-                    <td className="px-4 py-3 font-medium text-foreground">{b.categories?.name}</td>
-                    <td className="px-4 py-3 text-right">
-                      <div className="flex items-center justify-end gap-1">
-                        <span className="text-muted-foreground text-xs">S/</span>
+                  <div key={b.id} className="px-4 py-3 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="font-medium text-foreground">{b.categories?.name}</span>
+                      <button
+                        onClick={() => removeCategoryFromMonth(b.id, b.category_id)}
+                        className="text-gray-300 hover:text-red-400 transition-colors p-1 -mr-1"
+                        title="Quitar del mes"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                    <div className="flex items-center gap-3 flex-wrap">
+                      <div className="flex items-center gap-1">
+                        <span className="text-xs text-muted-foreground">{sym}</span>
                         <input
                           type="number" min="0" step="1"
                           value={amounts[b.category_id] ?? ''}
@@ -456,38 +457,98 @@ export function BudgetsClient({
                         />
                         {saving === b.category_id && <span className="text-xs text-muted-foreground">...</span>}
                       </div>
-                    </td>
-                    <td className={`px-4 py-3 text-right font-medium ${over ? 'text-red-500' : 'text-foreground/80'}`}>
-                      {sym} {fmt(fromPen(actual))}
-                    </td>
-                    <td className="px-4 py-3 w-40">
-                      {budget > 0 ? (
-                        <div className="space-y-1">
-                          <div className="h-2 w-full rounded-full bg-muted">
-                            <div className={`h-full rounded-full transition-all ${over ? 'bg-red-500' : warn ? 'bg-amber-400' : 'bg-emerald-500'}`} style={{ width: `${pct}%` }} />
-                          </div>
-                          <p className={`text-xs ${over ? 'text-red-500' : warn ? 'text-amber-600' : 'text-muted-foreground'}`}>
-                            {Math.round(pct)}%{over ? ' — excedido' : ''}
-                          </p>
+                      <span className="text-xs text-muted-foreground">
+                        Real: <span className={`font-medium ${over ? 'text-red-500' : 'text-foreground/80'}`}>{sym} {fmt(fromPen(actual))}</span>
+                      </span>
+                    </div>
+                    {budget > 0 ? (
+                      <div className="space-y-1">
+                        <div className="h-2 w-full rounded-full bg-muted">
+                          <div className={`h-full rounded-full transition-all ${over ? 'bg-red-500' : warn ? 'bg-amber-400' : 'bg-emerald-500'}`} style={{ width: `${pct}%` }} />
                         </div>
-                      ) : (
-                        <span className="text-xs text-gray-300">Sin monto</span>
-                      )}
-                    </td>
-                    <td className="px-4 py-3 text-center">
-                      <button
-                        onClick={() => removeCategoryFromMonth(b.id, b.category_id)}
-                        className="text-gray-200 hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100"
-                        title="Quitar del mes"
-                      >
-                        ✕
-                      </button>
-                    </td>
-                  </tr>
+                        <p className={`text-xs ${over ? 'text-red-500' : warn ? 'text-amber-600' : 'text-muted-foreground'}`}>
+                          {Math.round(pct)}%{over ? ' — excedido' : ''}
+                        </p>
+                      </div>
+                    ) : (
+                      <span className="text-xs text-gray-300">Sin monto asignado</span>
+                    )}
+                  </div>
                 )
               })}
-            </tbody>
-          </table>
+            </div>
+
+            {/* Desktop: tabla */}
+            <div className="hidden sm:block overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-border text-left text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                  <th className="px-4 py-3">Categoría</th>
+                  <th className="px-4 py-3 text-right">Presupuesto</th>
+                  <th className="px-4 py-3 text-right">Real</th>
+                  <th className="px-4 py-3">Progreso</th>
+                  <th className="px-4 py-3 w-8"></th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border">
+                {budgets.map(b => {
+                  const budget = parseFloat(amounts[b.category_id] ?? '0') || 0
+                  const actual = actualByCategory[b.category_id] ?? 0
+                  const pct = budget > 0 ? Math.min((actual / budget) * 100, 100) : 0
+                  const over = budget > 0 && actual > budget
+                  const warn = budget > 0 && pct >= 80 && !over
+
+                  return (
+                    <tr key={b.id} className="hover:bg-muted transition-colors group">
+                      <td className="px-4 py-3 font-medium text-foreground">{b.categories?.name}</td>
+                      <td className="px-4 py-3 text-right">
+                        <div className="flex items-center justify-end gap-1">
+                          <span className="text-muted-foreground text-xs">{sym}</span>
+                          <input
+                            type="number" min="0" step="1"
+                            value={amounts[b.category_id] ?? ''}
+                            onChange={e => setAmounts(prev => ({ ...prev, [b.category_id]: e.target.value }))}
+                            onBlur={() => saveBudget(b.category_id)}
+                            onKeyDown={e => e.key === 'Enter' && saveBudget(b.category_id)}
+                            placeholder="0"
+                            className="w-24 rounded border border-border px-2 py-1 text-right text-sm focus:outline-none focus:ring-1 focus:ring-ring"
+                          />
+                          {saving === b.category_id && <span className="text-xs text-muted-foreground">...</span>}
+                        </div>
+                      </td>
+                      <td className={`px-4 py-3 text-right font-medium ${over ? 'text-red-500' : 'text-foreground/80'}`}>
+                        {sym} {fmt(fromPen(actual))}
+                      </td>
+                      <td className="px-4 py-3 w-40">
+                        {budget > 0 ? (
+                          <div className="space-y-1">
+                            <div className="h-2 w-full rounded-full bg-muted">
+                              <div className={`h-full rounded-full transition-all ${over ? 'bg-red-500' : warn ? 'bg-amber-400' : 'bg-emerald-500'}`} style={{ width: `${pct}%` }} />
+                            </div>
+                            <p className={`text-xs ${over ? 'text-red-500' : warn ? 'text-amber-600' : 'text-muted-foreground'}`}>
+                              {Math.round(pct)}%{over ? ' — excedido' : ''}
+                            </p>
+                          </div>
+                        ) : (
+                          <span className="text-xs text-gray-300">Sin monto</span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3 text-center">
+                        <button
+                          onClick={() => removeCategoryFromMonth(b.id, b.category_id)}
+                          className="text-gray-200 hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100"
+                          title="Quitar del mes"
+                        >
+                          ✕
+                        </button>
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+            </div>
+          </>
         ) : (
           <div className="py-12 text-center">
             <p className="text-sm text-muted-foreground">No hay categorías en este presupuesto.</p>
@@ -514,8 +575,11 @@ export function BudgetsClient({
         )}
       </div>
 
-      <p className="text-xs text-muted-foreground">
+      <p className="text-xs text-muted-foreground hidden sm:block">
         Haz clic en el monto para editarlo · pasa el mouse sobre una fila para quitarla del mes (✕) · las plantillas guardan la estructura completa del mes actual.
+      </p>
+      <p className="text-xs text-muted-foreground sm:hidden">
+        Edita el monto y presiona Enter para guardar · toca ✕ para quitar una categoría del mes.
       </p>
 
       {/* Modal guardar plantilla */}
