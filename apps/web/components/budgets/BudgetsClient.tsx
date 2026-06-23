@@ -75,6 +75,7 @@ export function BudgetsClient({
   })
 
   const isMobile = useIsMobile()
+  const [activeSection, setActiveSection]   = useState<'expense' | 'income'>('expense')
   const [isEditing, setIsEditing]           = useState(false)
   const [isEditingIncome, setIsEditingIncome] = useState(false)
   const [saving, setSaving]                 = useState<string | null>(null)
@@ -406,8 +407,8 @@ export function BudgetsClient({
         )}
       </div>
 
-      {/* Header fila 2: acciones — solo en modo edición */}
-      {isEditing && <div className="flex items-center gap-1 sm:gap-2">
+      {/* Header fila 2: acciones — solo en modo edición de egresos */}
+      {isEditing && activeSection === 'expense' && <div className="flex items-center gap-1 sm:gap-2">
         {/* Copiar mes anterior */}
         <button
           onClick={copyPreviousMonth}
@@ -495,8 +496,32 @@ export function BudgetsClient({
         </button>
       </div>}
 
+      {/* Toggle Ingresos / Egresos */}
+      <div className="flex rounded-xl border border-border bg-card p-1 shadow-sm w-fit">
+        <button
+          onClick={() => setActiveSection('expense')}
+          className={`rounded-lg px-5 py-2 text-sm font-medium transition-colors ${
+            activeSection === 'expense'
+              ? 'bg-primary text-primary-foreground shadow-sm'
+              : 'text-muted-foreground hover:text-foreground'
+          }`}
+        >
+          Egresos
+        </button>
+        <button
+          onClick={() => setActiveSection('income')}
+          className={`rounded-lg px-5 py-2 text-sm font-medium transition-colors ${
+            activeSection === 'income'
+              ? 'bg-primary text-primary-foreground shadow-sm'
+              : 'text-muted-foreground hover:text-foreground'
+          }`}
+        >
+          Ingresos
+        </button>
+      </div>
+
       {/* ── Sección de INGRESOS ── */}
-      <div className="grid grid-cols-3 gap-2 sm:gap-4">
+      <div className={activeSection !== 'income' ? 'hidden' : 'grid grid-cols-3 gap-2 sm:gap-4'}>
         {[
           { label: 'Ingreso planificado', value: totalIncomeBudget, color: 'text-foreground' },
           { label: 'Ingreso real', value: totalActualIncome, color: 'text-emerald-600' },
@@ -509,7 +534,7 @@ export function BudgetsClient({
         ))}
       </div>
 
-      <div className="rounded-xl border border-border bg-card shadow-sm">
+      <div className={`rounded-xl border border-border bg-card shadow-sm${activeSection !== 'income' ? ' hidden' : ''}`}>
         <div className="flex items-center justify-between px-4 py-3 border-b border-border">
           <span className="text-sm font-semibold text-foreground">Ingresos planificados</span>
           <div className="flex items-center gap-2">
@@ -689,7 +714,7 @@ export function BudgetsClient({
       </div>
 
       {/* ── Sección de EGRESOS ── */}
-      <div className="grid grid-cols-3 gap-2 sm:gap-4">
+      <div className={activeSection !== 'expense' ? 'hidden' : 'grid grid-cols-3 gap-2 sm:gap-4'}>
         {[
           { label: 'Presupuesto', value: totalBudget, color: 'text-foreground' },
           { label: 'Gasto real', value: totalActual, color: 'text-red-500' },
@@ -703,7 +728,7 @@ export function BudgetsClient({
       </div>
 
       {/* Tabla / Tarjetas de egresos */}
-      <div className="rounded-xl border border-border bg-card shadow-sm">
+      <div className={`rounded-xl border border-border bg-card shadow-sm${activeSection !== 'expense' ? ' hidden' : ''}`}>
 
         {/* Header del card: título + botón editar/listo */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-border">
