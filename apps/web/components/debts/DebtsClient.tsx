@@ -112,8 +112,18 @@ export function DebtsClient({ debts: initial, userId, baseCurrency, plan }: Prop
     if (data) setDebts(prev => prev.map(d => d.id === debt.id ? data : d))
   }
 
-  const activeDebts   = debts.filter(d => d.is_active)
-  const inactiveDebts = debts.filter(d => !d.is_active)
+  async function deleteDebt(id: string) {
+    if (!confirm('¿Eliminar esta deuda? Esta acción no se puede deshacer.')) return
+    await supabase.from('debts').delete().eq('id', id)
+    setDebts(prev => prev.filter(d => d.id !== id))
+  }
+
+  // En plan free, las deudas que exceden el límite quedan bloqueadas (solo se pueden eliminar)
+  const allowed       = plan === 'free' ? debts.slice(0, limits.debts) : debts
+  const blocked       = plan === 'free' ? debts.slice(limits.debts) : []
+
+  const activeDebts   = allowed.filter(d => d.is_active)
+  const inactiveDebts = allowed.filter(d => !d.is_active)
   const totalDebt     = activeDebts.reduce((s, d) => s + d.current_balance, 0)
   const totalMonthly  = activeDebts.reduce((s, d) => s + d.monthly_payment, 0)
 
@@ -174,9 +184,10 @@ export function DebtsClient({ debts: initial, userId, baseCurrency, plan }: Prop
                   <h3 className="font-semibold text-foreground">{debt.creditor}</h3>
                   <p className="text-xs text-muted-foreground mt-0.5">Pago el día {debt.payment_day} de cada mes</p>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex gap-2 items-center">
                   <button onClick={() => openEdit(debt)} className="text-xs text-muted-foreground hover:text-primary">Editar</button>
                   <button onClick={() => toggleActive(debt)} className="text-xs text-muted-foreground hover:text-emerald-600 dark:hover:text-emerald-400">Marcar pagada</button>
+                  <button onClick={() => deleteDebt(debt.id)} className="text-xs text-red-400 hover:text-red-500 px-1" title="Eliminar">✕</button>
                 </div>
               </div>
 
@@ -248,15 +259,47 @@ export function DebtsClient({ debts: initial, userId, baseCurrency, plan }: Prop
           <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">Pagadas / inactivas</p>
           <div className="space-y-2">
             {inactiveDebts.map(debt => (
-              <div key={debt.id} className="flex items-center justify-between rounded-lg border border-border bg-muted px-4 py-3">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground line-through">{debt.creditor}</p>
+              <div key={debt.id} className="flex items-center justify-between rounded-lg border border-border bg-muted px-4 py-3 gap-3">
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-muted-foreground line-through truncate">{debt.creditor}</p>
                   <p className="text-xs text-muted-foreground">{sym} {fmt(fromPen(debt.initial_balance))}</p>
                 </div>
-                <button onClick={() => toggleActive(debt)} className="text-xs text-muted-foreground hover:text-primary">Reactivar</button>
+                <div className="flex items-center gap-2 shrink-0">
+                  <button onClick={() => toggleActive(debt)} className="text-xs text-muted-foreground hover:text-primary">Reactivar</button>
+                  <button onClick={() => deleteDebt(debt.id)} className="text-xs text-red-400 hover:text-red-500 px-1" title="Eliminar">✕</button>
+                </div>
               </div>
             ))}
           </div>
+        </div>
+      )}
+
+      {/* Bloqueadas por plan free */}
+      {blocked.length > 0 && (
+        <div>
+          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">Bloqueadas por plan gratuito</p>
+          <div className="space-y-2">
+            {blocked.map(debt => (
+              <div key={debt.id} className="flex items-center justify-between rounded-lg border border-border bg-muted/50 px-4 py-3 gap-3 opacity-70">
+                <div className="flex items-center gap-2 flex-1 min-w-0">
+                  <span className="text-base shrink-0">🔒</span>
+                  <div className="min-w-0">
+                    <p className="text-sm text-muted-foreground truncate">{debt.creditor}</p>
+                    <p className="text-xs text-muted-foreground/60">{sym} {fmt(fromPen(debt.current_balance))} pendiente</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => deleteDebt(debt.id)}
+                  className="shrink-0 rounded-lg border border-red-200 px-3 py-1.5 text-xs text-red-400 hover:bg-red-50 hover:border-red-300 hover:text-red-500 transition-colors"
+                >
+                  Eliminar
+                </button>
+              </div>
+            ))}
+          </div>
+          <p className="text-xs text-muted-foreground mt-2">
+            Actualiza a <a href="/pricing" className="text-primary hover:underline">Premium</a> para desbloquear todas tus deudas.
+          </p>
         </div>
       )}
 
