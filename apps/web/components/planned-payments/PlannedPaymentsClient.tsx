@@ -106,6 +106,12 @@ export function PlannedPaymentsClient({ payments: initial, categories, userId, b
     setLoading(false); setShowForm(false)
   }
 
+  async function deletePayment(id: string) {
+    if (!confirm('¿Eliminar esta alerta de pago? Esta acción no se puede deshacer.')) return
+    await supabase.from('planned_payments').delete().eq('id', id)
+    setPayments(prev => prev.filter(p => p.id !== id))
+  }
+
   async function toggleActive(p: Payment) {
     const { data } = await supabase.from('planned_payments').update({ is_active: !p.is_active }).eq('id', p.id).select('*, categories(name)').single()
     if (data) setPayments(prev => prev.map(x => x.id === p.id ? data as any : x))
@@ -130,8 +136,12 @@ export function PlannedPaymentsClient({ payments: initial, categories, userId, b
     setRegistering(null)
   }
 
-  const active   = payments.filter(p => p.is_active)
-  const inactive = payments.filter(p => !p.is_active)
+  // En plan free, las alertas que exceden el límite quedan bloqueadas (solo se pueden eliminar)
+  const allowed  = plan === 'free' ? payments.slice(0, limits.planned_payments) : payments
+  const blocked  = plan === 'free' ? payments.slice(limits.planned_payments) : []
+
+  const active   = allowed.filter(p => p.is_active)
+  const inactive = allowed.filter(p => !p.is_active)
 
   const inputClass = 'w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring'
 
@@ -206,6 +216,7 @@ export function PlannedPaymentsClient({ payments: initial, categories, userId, b
                 </button>
                 <button onClick={() => openEdit(p)} className="rounded-lg border border-border px-3 py-1.5 text-xs text-muted-foreground hover:bg-muted transition-colors">Editar</button>
                 <button onClick={() => toggleActive(p)} className="rounded-lg border border-border px-3 py-1.5 text-xs text-muted-foreground hover:bg-muted transition-colors">Desactivar</button>
+                <button onClick={() => deletePayment(p.id)} className="rounded-lg border border-red-200 px-3 py-1.5 text-xs text-red-400 hover:bg-red-50 hover:border-red-300 hover:text-red-500 transition-colors" title="Eliminar">✕</button>
               </div>
             </div>
           )
@@ -218,12 +229,44 @@ export function PlannedPaymentsClient({ payments: initial, categories, userId, b
           <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Inactivos</p>
           <div className="space-y-2">
             {inactive.map(p => (
-              <div key={p.id} className="flex items-center justify-between rounded-lg border border-border bg-muted px-4 py-3">
-                <p className="text-sm text-muted-foreground line-through">{p.concept}</p>
-                <button onClick={() => toggleActive(p)} className="text-xs text-muted-foreground hover:text-primary">Activar</button>
+              <div key={p.id} className="flex items-center justify-between rounded-lg border border-border bg-muted px-4 py-3 gap-3">
+                <p className="text-sm text-muted-foreground line-through flex-1">{p.concept}</p>
+                <div className="flex items-center gap-2 shrink-0">
+                  <button onClick={() => toggleActive(p)} className="text-xs text-muted-foreground hover:text-primary">Activar</button>
+                  <button onClick={() => deletePayment(p.id)} className="text-xs text-red-400 hover:text-red-500" title="Eliminar">✕</button>
+                </div>
               </div>
             ))}
           </div>
+        </div>
+      )}
+
+      {/* Bloqueados por plan free */}
+      {blocked.length > 0 && (
+        <div>
+          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Bloqueados por plan gratuito</p>
+          <div className="space-y-2">
+            {blocked.map(p => (
+              <div key={p.id} className="flex items-center justify-between rounded-lg border border-border bg-muted/50 px-4 py-3 gap-3 opacity-70">
+                <div className="flex items-center gap-2 flex-1 min-w-0">
+                  <span className="text-base shrink-0">🔒</span>
+                  <div className="min-w-0">
+                    <p className="text-sm text-muted-foreground truncate">{p.concept}</p>
+                    <p className="text-xs text-muted-foreground/60">{sym} {fmt(toBase(p.amount, p.currency as 'PEN' | 'USD'))} · {FREQ_LABELS[p.frequency]}</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => deletePayment(p.id)}
+                  className="shrink-0 rounded-lg border border-red-200 px-3 py-1.5 text-xs text-red-400 hover:bg-red-50 hover:border-red-300 hover:text-red-500 transition-colors"
+                >
+                  Eliminar
+                </button>
+              </div>
+            ))}
+          </div>
+          <p className="text-xs text-muted-foreground mt-2">
+            Actualiza a <a href="/pricing" className="text-primary hover:underline">Premium</a> para desbloquear todas tus alertas.
+          </p>
         </div>
       )}
 
