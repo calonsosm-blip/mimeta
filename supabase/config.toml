@@ -44,3 +44,7 @@ verify_jwt = false
 # Recordatorio de pagos próximos (8 AM hora Lima → 1 PM UTC)
 [functions.payment-reminders]
 verify_jwt = false
+
+# Reporte mensual por email — día 1 de cada mes, 8 AM Lima (1 PM UTC)
+[functions.monthly-report]
+verify_jwt = false
