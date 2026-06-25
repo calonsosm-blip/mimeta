@@ -19,6 +19,7 @@ import { CSS } from '@dnd-kit/utilities'
 import { createClient } from '@/lib/supabase/client'
 import { getLimits } from '@/lib/planLimits'
 import { UpgradePrompt } from '@/components/ui/UpgradePrompt'
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 
 interface Category { id: string; name: string; type: string; sort_order: number }
 
@@ -137,6 +138,7 @@ export function CategoryPanel({ categories: initialCats, userId, type = 'expense
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editingName, setEditingName] = useState('')
   const [showUpgrade, setShowUpgrade] = useState(false)
+  const [confirm, setConfirm] = useState<{ title: string; message: string; onConfirm: () => void } | null>(null)
 
   const limits = getLimits(plan)
 
@@ -201,12 +203,18 @@ export function CategoryPanel({ categories: initialCats, userId, type = 'expense
       return
     }
 
-    if (!confirm('¿Eliminar esta categoría? También se quitará de todos los presupuestos.')) return
-    await supabase.from('budgets').delete().eq('category_id', id)
-    await supabase.from('categories').delete().eq('id', id)
-    const updated = cats.filter(c => c.id !== id)
-    setCats(updated)
-    onChange(updated)
+    setConfirm({
+      title: 'Eliminar categoría',
+      message: '¿Estás seguro? Se quitará de todos los presupuestos donde esté asignada.',
+      onConfirm: async () => {
+        await supabase.from('budgets').delete().eq('category_id', id)
+        await supabase.from('categories').delete().eq('id', id)
+        const updated = cats.filter(c => c.id !== id)
+        setCats(updated)
+        onChange(updated)
+        setConfirm(null)
+      },
+    })
   }
 
   return (
@@ -217,6 +225,13 @@ export function CategoryPanel({ categories: initialCats, userId, type = 'expense
         feature="categorías"
         limit={limits.categories}
         unit="categorías"
+      />
+      <ConfirmDialog
+        open={!!confirm}
+        title={confirm?.title ?? ''}
+        message={confirm?.message ?? ''}
+        onConfirm={confirm?.onConfirm ?? (() => {})}
+        onClose={() => setConfirm(null)}
       />
       <div className="fixed inset-0 z-40 bg-black/20" onClick={onClose} />
       <div className="fixed right-0 top-0 z-50 h-full w-80 bg-card shadow-2xl flex flex-col">

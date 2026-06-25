@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/client'
 import { useCurrency } from '@/hooks/useCurrency'
 import { getLimits } from '@/lib/planLimits'
 import { UpgradePrompt } from '@/components/ui/UpgradePrompt'
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 
 interface Category { id: string; name: string; type: string }
 interface Payment {
@@ -57,6 +58,7 @@ export function PlannedPaymentsClient({ payments: initial, categories, userId, b
   const [registering, setRegistering] = useState<string | null>(null)
   const [error, setError]           = useState<string | null>(null)
   const [showUpgrade, setShowUpgrade] = useState(false)
+  const [confirm, setConfirm] = useState<{ title: string; message: string; onConfirm: () => void } | null>(null)
 
   const limits = getLimits(plan)
 
@@ -106,10 +108,16 @@ export function PlannedPaymentsClient({ payments: initial, categories, userId, b
     setLoading(false); setShowForm(false)
   }
 
-  async function deletePayment(id: string) {
-    if (!confirm('¿Eliminar esta alerta de pago? Esta acción no se puede deshacer.')) return
-    await supabase.from('planned_payments').delete().eq('id', id)
-    setPayments(prev => prev.filter(p => p.id !== id))
+  function deletePayment(id: string) {
+    setConfirm({
+      title: 'Eliminar alerta de pago',
+      message: '¿Estás seguro? Esta acción no se puede deshacer.',
+      onConfirm: async () => {
+        await supabase.from('planned_payments').delete().eq('id', id)
+        setPayments(prev => prev.filter(p => p.id !== id))
+        setConfirm(null)
+      },
+    })
   }
 
   async function toggleActive(p: Payment) {
@@ -153,6 +161,13 @@ export function PlannedPaymentsClient({ payments: initial, categories, userId, b
         feature="alertas de pago"
         limit={limits.planned_payments}
         unit="alertas"
+      />
+      <ConfirmDialog
+        open={!!confirm}
+        title={confirm?.title ?? ''}
+        message={confirm?.message ?? ''}
+        onConfirm={confirm?.onConfirm ?? (() => {})}
+        onClose={() => setConfirm(null)}
       />
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-foreground">Alertas de pago</h1>

@@ -7,6 +7,7 @@ import { useCurrency } from '@/hooks/useCurrency'
 import { useIsMobile } from '@/hooks/useIsMobile'
 import { CategoryPanel } from './CategoryPanel'
 import { ArrowLeft, Bookmark, Check, ChevronLeft, ChevronRight, ClipboardList, Pencil, Settings2, Trash2 } from 'lucide-react'
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 
 interface Category { id: string; name: string; type: string; sort_order: number }
 interface BudgetRow {
@@ -92,6 +93,7 @@ export function BudgetsClient({
   const [savingTemplate, setSavingTemplate] = useState(false)
   const [showApplyMenu, setShowApplyMenu] = useState(false)
   const [applyingTemplate, setApplyingTemplate] = useState(false)
+  const [confirm, setConfirm] = useState<{ title: string; message: string; onConfirm: () => void } | null>(null)
 
   // Categorías disponibles para agregar en cada sección
   const budgetedCatIds    = new Set(budgets.map(b => b.category_id))
@@ -153,19 +155,17 @@ export function BudgetsClient({
     setAmounts(prev => { const next = { ...prev }; delete next[categoryId]; return next })
   }
 
-  async function clearAllCategories() {
-    if (!confirm('¿Quitar todas las categorías de este mes? Los montos se perderán.')) return
-    const { error } = await supabase.from('budgets')
-      .delete()
-      .eq('user_id', userId)
-      .eq('year', selectedYear)
-      .eq('month', selectedMonth)
-    if (!error) {
-      setBudgets([])
-      setAmounts({})
-      setIncomeBudgets([])
-      setIncomeAmounts({})
-    }
+  function clearAllCategories() {
+    setConfirm({
+      title: 'Limpiar mes',
+      message: '¿Quitar todas las categorías de este mes? Los montos se perderán.',
+      onConfirm: async () => {
+        const { error } = await supabase.from('budgets')
+          .delete().eq('user_id', userId).eq('year', selectedYear).eq('month', selectedMonth)
+        if (!error) { setBudgets([]); setAmounts({}); setIncomeBudgets([]); setIncomeAmounts({}) }
+        setConfirm(null)
+      },
+    })
   }
 
   // ── Funciones de ingreso ──────────────────────────────────────────────────
@@ -271,9 +271,19 @@ export function BudgetsClient({
 
   // Aplicar plantilla
   async function applyTemplate(template: Template) {
-    if (!confirm(`¿Aplicar la plantilla "${template.name}"? Se reemplazará el presupuesto actual de este mes.`)) return
-    setApplyingTemplate(true)
     setShowApplyMenu(false)
+    setConfirm({
+      title: `Aplicar plantilla "${template.name}"`,
+      message: 'Se reemplazará el presupuesto actual de este mes. ¿Continuar?',
+      onConfirm: async () => {
+        setConfirm(null)
+        await doApplyTemplate(template)
+      },
+    })
+  }
+
+  async function doApplyTemplate(template: Template) {
+    setApplyingTemplate(true)
 
     // 1. Borrar todo el presupuesto del mes (incluye ingresos)
     await supabase.from('budgets')
@@ -319,10 +329,16 @@ export function BudgetsClient({
     setApplyingTemplate(false)
   }
 
-  async function deleteTemplate(id: string) {
-    if (!confirm('¿Eliminar esta plantilla?')) return
-    await supabase.from('budget_templates').delete().eq('id', id)
-    setTemplates(prev => prev.filter(t => t.id !== id))
+  function deleteTemplate(id: string) {
+    setConfirm({
+      title: 'Eliminar plantilla',
+      message: '¿Estás seguro? Esta acción no se puede deshacer.',
+      onConfirm: async () => {
+        await supabase.from('budget_templates').delete().eq('id', id)
+        setTemplates(prev => prev.filter(t => t.id !== id))
+        setConfirm(null)
+      },
+    })
   }
 
   const totalBudget  = budgets.reduce((s, b) => s + (parseFloat(amounts[b.category_id] ?? '0') || 0), 0)
@@ -1005,6 +1021,14 @@ export function BudgetsClient({
           onClose={() => setShowIncomeCatPanel(false)}
         />
       )}
+
+      <ConfirmDialog
+        open={!!confirm}
+        title={confirm?.title ?? ''}
+        message={confirm?.message ?? ''}
+        onConfirm={confirm?.onConfirm ?? (() => {})}
+        onClose={() => setConfirm(null)}
+      />
     </div>
   )
 }

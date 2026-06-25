@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/client'
 import { useCurrency } from '@/hooks/useCurrency'
 import { getLimits } from '@/lib/planLimits'
 import { UpgradePrompt } from '@/components/ui/UpgradePrompt'
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 
 interface Debt {
   id: string
@@ -41,6 +42,7 @@ export function DebtsClient({ debts: initial, userId, baseCurrency, plan }: Prop
   const [payingId, setPayingId] = useState<string | null>(null)
   const [payAmount, setPayAmount] = useState('')
   const [showUpgrade, setShowUpgrade] = useState(false)
+  const [confirm, setConfirm] = useState<{ title: string; message: string; onConfirm: () => void } | null>(null)
 
   const limits = getLimits(plan)
 
@@ -112,10 +114,16 @@ export function DebtsClient({ debts: initial, userId, baseCurrency, plan }: Prop
     if (data) setDebts(prev => prev.map(d => d.id === debt.id ? data : d))
   }
 
-  async function deleteDebt(id: string) {
-    if (!confirm('¿Eliminar esta deuda? Esta acción no se puede deshacer.')) return
-    await supabase.from('debts').delete().eq('id', id)
-    setDebts(prev => prev.filter(d => d.id !== id))
+  function deleteDebt(id: string) {
+    setConfirm({
+      title: 'Eliminar deuda',
+      message: '¿Estás seguro? Esta acción no se puede deshacer.',
+      onConfirm: async () => {
+        await supabase.from('debts').delete().eq('id', id)
+        setDebts(prev => prev.filter(d => d.id !== id))
+        setConfirm(null)
+      },
+    })
   }
 
   // En plan free, las deudas que exceden el límite quedan bloqueadas (solo se pueden eliminar)
@@ -137,6 +145,13 @@ export function DebtsClient({ debts: initial, userId, baseCurrency, plan }: Prop
         feature="deudas"
         limit={limits.debts}
         unit="deudas"
+      />
+      <ConfirmDialog
+        open={!!confirm}
+        title={confirm?.title ?? ''}
+        message={confirm?.message ?? ''}
+        onConfirm={confirm?.onConfirm ?? (() => {})}
+        onClose={() => setConfirm(null)}
       />
       <div className="flex items-center justify-between">
         <h1 className="text-xl sm:text-2xl font-bold text-foreground">Deudas</h1>

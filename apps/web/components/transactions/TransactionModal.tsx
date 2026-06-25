@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { Loader2 } from 'lucide-react'
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 
 interface Category {
   id: string
@@ -54,6 +55,7 @@ export function TransactionModal({ transaction, categories, userId, baseCurrency
   const [loading, setLoading] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [error, setError]     = useState<string | null>(null)
+  const [showConfirm, setShowConfirm] = useState(false)
   const [budgetCatIds, setBudgetCatIds] = useState<string[] | null>(null)
   const [loadingCats, setLoadingCats]   = useState(false)
 
@@ -212,7 +214,6 @@ export function TransactionModal({ transaction, categories, userId, baseCurrency
   }
 
   async function handleDelete() {
-    if (!confirm('¿Eliminar esta transacción?')) return
     setDeleting(true)
     const { error: err } = await supabase.from('transactions').delete().eq('id', transaction!.id)
     if (err) { setError(err.message); setDeleting(false); return }
@@ -416,7 +417,7 @@ export function TransactionModal({ transaction, categories, userId, baseCurrency
             {!isNew && (
               <button
                 type="button"
-                onClick={handleDelete}
+                onClick={() => setShowConfirm(true)}
                 disabled={deleting}
                 className="rounded-lg border border-red-200 px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50 transition-colors disabled:opacity-50"
               >
@@ -440,6 +441,13 @@ export function TransactionModal({ transaction, categories, userId, baseCurrency
           </div>
         </form>
       </div>
+      <ConfirmDialog
+        open={showConfirm}
+        title="Eliminar transacción"
+        message="¿Estás seguro? Esta acción no se puede deshacer."
+        onConfirm={handleDelete}
+        onClose={() => setShowConfirm(false)}
+      />
     </div>
   )
 }

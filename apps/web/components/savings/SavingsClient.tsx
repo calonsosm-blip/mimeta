@@ -6,6 +6,7 @@ import { Pencil, Trash2, CheckCircle2, Zap, SlidersHorizontal, RotateCcw, HelpCi
 import { useCurrency } from '@/hooks/useCurrency'
 import { getLimits } from '@/lib/planLimits'
 import { UpgradePrompt } from '@/components/ui/UpgradePrompt'
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 
 /* ─── Tipos ─────────────────────────────────────────────── */
 interface Snapshot {
@@ -70,6 +71,7 @@ export function SavingsClient({
   const [goalForm, setGoalForm]         = useState<any>(EMPTY_GOAL)
   const [goalLoading, setGoalLoading]   = useState(false)
   const [showUpgrade, setShowUpgrade]   = useState(false)
+  const [confirm, setConfirm] = useState<{ title: string; message: string; onConfirm: () => void } | null>(null)
 
   const limits = getLimits(plan)
   const [updatingId, setUpdatingId]     = useState<string | null>(null)
@@ -188,11 +190,17 @@ export function SavingsClient({
     }
     setGoalLoading(false); setShowGoalForm(false)
   }
-  async function deleteGoal(id: string) {
-    if (!confirm('¿Eliminar esta meta?')) return
-    await supabase.from('savings_goals').delete().eq('id', id)
-    setGoals(prev => prev.filter(g => g.id !== id))
-    removeGoalPct(id)
+  function deleteGoal(id: string) {
+    setConfirm({
+      title: 'Eliminar meta de ahorro',
+      message: '¿Estás seguro? Se perderá todo el historial de esta meta.',
+      onConfirm: async () => {
+        await supabase.from('savings_goals').delete().eq('id', id)
+        setGoals(prev => prev.filter(g => g.id !== id))
+        removeGoalPct(id)
+        setConfirm(null)
+      },
+    })
   }
   async function toggleCompleted(g: Goal) {
     const { data } = await supabase.from('savings_goals').update({ is_completed: !g.is_completed }).eq('id', g.id).select('*').single()
@@ -291,6 +299,13 @@ export function SavingsClient({
         feature="metas de ahorro"
         limit={limits.savings_goals}
         unit="metas"
+      />
+      <ConfirmDialog
+        open={!!confirm}
+        title={confirm?.title ?? ''}
+        message={confirm?.message ?? ''}
+        onConfirm={confirm?.onConfirm ?? (() => {})}
+        onClose={() => setConfirm(null)}
       />
 
       {/* ── Header ── */}
