@@ -1,7 +1,22 @@
 import Link from 'next/link'
 import Image from 'next/image'
 
-const PLANS = [
+type Feature = {
+  text: string
+  soon?: boolean
+}
+
+const PLANS: {
+  name: string
+  price: string
+  period: string
+  annual?: string
+  description: string
+  cta: string
+  ctaHref: string
+  highlight: boolean
+  features: Feature[]
+}[] = [
   {
     name: 'Gratis',
     price: 'S/ 0',
@@ -11,17 +26,16 @@ const PLANS = [
     ctaHref: '/login',
     highlight: false,
     features: [
-      'Registro de transacciones ilimitado',
-      '6 meses de historial',
-      'Hasta 10 categorías',
-      'Dashboard con Termómetro de Fin de Mes',
-      'Modo Invisible (ocultar saldos)',
-      '1 análisis IA por mes',
-      'Hasta 3 pagos recurrentes',
+      { text: 'Registro de transacciones ilimitado' },
+      { text: '6 meses de historial' },
+      { text: 'Hasta 2 registros de alertas de pago' },
+      { text: 'Hasta 2 registros de deudas' },
+      { text: 'Hasta 2 metas de ahorro' },
+      { text: 'Dashboard con Termómetro del Mes' },
     ],
   },
   {
-    name: 'Personal',
+    name: 'Premium',
     price: 'S/ 12',
     period: 'mes',
     annual: 'S/ 99/año — ahorras S/ 45',
@@ -30,55 +44,20 @@ const PLANS = [
     ctaHref: '/login',
     highlight: true,
     features: [
-      'Todo lo del plan Gratis',
-      'Historial completo ilimitado',
-      'Gráficas y reportes mensuales/anuales',
-      'Categorías ilimitadas',
-      'Pagos recurrentes ilimitados',
-      'Tracker de deudas con proyección',
-      'Alertas de pago por email',
-      'Análisis IA ilimitado',
-      'Categorización automática IA',
-      'Registro por Voz',
-      'Score de Salud Financiera',
-      'Detector de Gastos Hormiga',
-      'Simulador de Decisiones',
-      'Retos de Ahorro personalizados',
-      'Scanner de comprobantes (30/mes)',
-      'Exportar datos en Excel/CSV',
-      'Compartir Resumen mensual',
-    ],
-  },
-  {
-    name: 'Pareja',
-    price: 'S/ 18',
-    period: 'mes',
-    annual: 'S/ 149/año — ahorras S/ 67',
-    description: 'Dos personas con sus datos separados, un solo pago',
-    cta: 'Comenzar ahora',
-    ctaHref: '/login',
-    highlight: false,
-    features: [
-      'Todo lo del plan Personal',
-      '2 usuarios con datos completamente separados',
-      'Un solo pago mensual',
-    ],
-  },
-  {
-    name: 'Familiar',
-    price: 'S/ 28',
-    period: 'mes',
-    annual: 'S/ 229/año — ahorras S/ 107',
-    description: 'El dueño paga, la familia entera controla sus finanzas',
-    cta: 'Comenzar ahora',
-    ctaHref: '/login',
-    highlight: false,
-    features: [
-      'Todo lo del plan Personal',
-      'Hasta 5 usuarios (tú + 4 miembros)',
-      'Datos completamente separados por persona',
-      'Vista resumen consolidada del grupo',
-      'Invitar miembros por email',
+      { text: 'Todo lo del plan Gratis' },
+      { text: 'Historial completo ilimitado' },
+      { text: 'Categorías ilimitadas' },
+      { text: 'Alertas de pago ilimitadas' },
+      { text: 'Registro de deudas ilimitadas' },
+      { text: 'Metas de ahorro ilimitadas' },
+      { text: 'Alertas de pago por email' },
+      { text: 'Reportes mensuales y anuales', soon: true },
+      { text: 'Exportar en Excel/CSV', soon: true },
+      { text: 'Análisis IA ilimitado', soon: true },
+      { text: 'Categorización automática IA', soon: true },
+      { text: 'Score de Salud Financiera', soon: true },
+      { text: 'Registro por voz', soon: true },
+      { text: 'Scanner de comprobantes', soon: true },
     ],
   },
 ]
@@ -88,7 +67,7 @@ export default function PricingPage() {
     <div className="min-h-screen bg-muted">
       {/* Header */}
       <header className="border-b border-border bg-card/80 backdrop-blur-sm sticky top-0 z-10">
-        <div className="mx-auto max-w-6xl px-6 py-4 flex items-center justify-between">
+        <div className="mx-auto max-w-5xl px-6 py-4 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2.5">
             <Image src="/isotipo.svg" alt="MiMeta" width={32} height={32} className="object-contain shrink-0 dark:invert" />
             <div>
@@ -105,7 +84,7 @@ export default function PricingPage() {
         </div>
       </header>
 
-      <main className="mx-auto max-w-6xl px-6 py-16">
+      <main className="mx-auto max-w-5xl px-6 py-16">
         {/* Hero */}
         <div className="text-center mb-14">
           <span className="inline-block rounded-full bg-primary/10 border border-primary/20 px-3 py-1 text-xs font-semibold text-primary mb-4">
@@ -120,7 +99,7 @@ export default function PricingPage() {
         </div>
 
         {/* Plans grid */}
-        <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-4">
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 max-w-3xl mx-auto">
           {PLANS.map(plan => (
             <div
               key={plan.name}
@@ -152,9 +131,16 @@ export default function PricingPage() {
 
               <ul className="flex-1 space-y-2 mb-7">
                 {plan.features.map(feature => (
-                  <li key={feature} className="flex items-start gap-2 text-xs text-muted-foreground">
+                  <li key={feature.text} className="flex items-start gap-2 text-xs text-muted-foreground">
                     <span className="mt-0.5 text-primary shrink-0 font-bold">✓</span>
-                    {feature}
+                    <span>
+                      {feature.text}
+                      {feature.soon && (
+                        <span className="ml-1.5 inline-block rounded-full bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-400 px-1.5 py-0.5 text-[10px] font-semibold leading-none">
+                          Próximamente
+                        </span>
+                      )}
+                    </span>
                   </li>
                 ))}
               </ul>

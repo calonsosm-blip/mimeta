@@ -10,9 +10,10 @@ interface Props {
   feature: string
   limit: number
   unit: string
+  message?: string
 }
 
-export function UpgradePrompt({ open, onClose, feature, limit, unit }: Props) {
+export function UpgradePrompt({ open, onClose, feature, limit, unit, message }: Props) {
   const router = useRouter()
 
   if (!open) return null
@@ -33,12 +34,16 @@ export function UpgradePrompt({ open, onClose, feature, limit, unit }: Props) {
 
         <h2 className="mb-2 text-lg font-semibold">Límite del plan gratuito</h2>
         <p className="mb-6 text-sm text-muted-foreground">
-          El plan gratuito incluye hasta{' '}
-          <span className="font-medium text-foreground">
-            {limit} {unit}
-          </span>
-          . Actualiza a Premium para {feature} ilimitado
-          {unit === 'metas' || unit === 'categorías' ? 's' : ''}.
+          {message ?? (
+            <>
+              El plan gratuito incluye hasta{' '}
+              <span className="font-medium text-foreground">
+                {limit} {unit}
+              </span>
+              . Actualiza a Premium para {feature} ilimitado
+              {unit === 'metas' || unit === 'categorías' ? 's' : ''}.
+            </>
+          )}
         </p>
 
         <div className="flex flex-col gap-2">
