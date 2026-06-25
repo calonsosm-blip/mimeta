@@ -16,7 +16,7 @@ export default async function PlannedPaymentsPage() {
       .select('id, name, type')
       .eq('user_id', user!.id)
       .order('sort_order'),
-    supabase.from('profiles').select('base_currency').eq('id', user!.id).single(),
+    supabase.from('profiles').select('base_currency, plan').eq('id', user!.id).single(),
   ])
 
   return (
@@ -25,6 +25,7 @@ export default async function PlannedPaymentsPage() {
       categories={catRes.data ?? []}
       userId={user!.id}
       baseCurrency={(profileRes.data?.base_currency as 'PEN' | 'USD') ?? 'PEN'}
+      plan={(profileRes.data?.plan as 'free' | 'premium') ?? 'free'}
     />
   )
 }

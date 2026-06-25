@@ -7,7 +7,7 @@ export default async function DebtsPage() {
 
   const [debtsRes, profileRes] = await Promise.all([
     supabase.from('debts').select('*').eq('user_id', user!.id).order('created_at', { ascending: false }),
-    supabase.from('profiles').select('base_currency').eq('id', user!.id).single(),
+    supabase.from('profiles').select('base_currency, plan').eq('id', user!.id).single(),
   ])
 
   return (
@@ -15,6 +15,7 @@ export default async function DebtsPage() {
       debts={debtsRes.data ?? []}
       userId={user!.id}
       baseCurrency={(profileRes.data?.base_currency as 'PEN' | 'USD') ?? 'PEN'}
+      plan={(profileRes.data?.plan as 'free' | 'premium') ?? 'free'}
     />
   )
 }

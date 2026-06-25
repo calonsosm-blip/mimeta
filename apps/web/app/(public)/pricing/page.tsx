@@ -90,7 +90,7 @@ export default function PricingPage() {
       <header className="border-b border-border bg-card/80 backdrop-blur-sm sticky top-0 z-10">
         <div className="mx-auto max-w-6xl px-6 py-4 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2.5">
-            <Image src="/mimeta-isotipo.png" alt="MiMeta" width={32} height={32} className="object-contain shrink-0" />
+            <Image src="/isotipo.svg" alt="MiMeta" width={32} height={32} className="object-contain shrink-0 dark:invert" />
             <div>
               <p className="text-sm font-bold text-foreground leading-tight">MiMeta</p>
               <p className="text-[11px] text-muted-foreground leading-tight">Tus metas, más cerca cada día.</p>

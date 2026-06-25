@@ -17,6 +17,8 @@ import {
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { createClient } from '@/lib/supabase/client'
+import { getLimits } from '@/lib/planLimits'
+import { UpgradePrompt } from '@/components/ui/UpgradePrompt'
 
 interface Category { id: string; name: string; type: string; sort_order: number }
 
@@ -24,6 +26,8 @@ interface Props {
   categories: Category[]
   userId: string
   type?: 'income' | 'expense'
+  plan: 'free' | 'premium'
+  totalCategories: number
   onChange: (cats: Category[]) => void
   onClose: () => void
 }
@@ -125,13 +129,16 @@ function SortableItem({
   )
 }
 
-export function CategoryPanel({ categories: initialCats, userId, type = 'expense', onChange, onClose }: Props) {
+export function CategoryPanel({ categories: initialCats, userId, type = 'expense', plan, totalCategories, onChange, onClose }: Props) {
   const supabase = createClient()
   const [cats, setCats] = useState(initialCats)
   const [newCatName, setNewCatName] = useState('')
   const [addingCat, setAddingCat] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editingName, setEditingName] = useState('')
+  const [showUpgrade, setShowUpgrade] = useState(false)
+
+  const limits = getLimits(plan)
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }))
 
@@ -155,6 +162,7 @@ export function CategoryPanel({ categories: initialCats, userId, type = 'expense
   async function addCategory(e: React.FormEvent) {
     e.preventDefault()
     if (!newCatName.trim()) return
+    if (totalCategories >= limits.categories) { setShowUpgrade(true); return }
     setAddingCat(true)
     const { data } = await supabase
       .from('categories')
@@ -203,6 +211,13 @@ export function CategoryPanel({ categories: initialCats, userId, type = 'expense
 
   return (
     <>
+      <UpgradePrompt
+        open={showUpgrade}
+        onClose={() => setShowUpgrade(false)}
+        feature="categorías"
+        limit={limits.categories}
+        unit="categorías"
+      />
       <div className="fixed inset-0 z-40 bg-black/20" onClick={onClose} />
       <div className="fixed right-0 top-0 z-50 h-full w-80 bg-card shadow-2xl flex flex-col">
         <div className="flex items-center justify-between border-b border-border px-5 py-4">

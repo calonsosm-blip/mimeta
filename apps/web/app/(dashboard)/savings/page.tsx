@@ -34,7 +34,7 @@ export default async function SavingsPage() {
       p_year:    year,
       p_month:   month,
     }),
-    supabase.from('profiles').select('base_currency').eq('id', user!.id).single(),
+    supabase.from('profiles').select('base_currency, plan').eq('id', user!.id).single(),
   ])
 
   const accumulatedBalance = ((cumulativeRes.data ?? []) as any[]).reduce((sum, tx) => {
@@ -54,6 +54,7 @@ export default async function SavingsPage() {
       monthlyBalance={monthlyBalance}
       currentMonthLabel={monthlyLabel}
       baseCurrency={(profileRes.data?.base_currency as 'PEN' | 'USD') ?? 'PEN'}
+      plan={(profileRes.data?.plan as 'free' | 'premium') ?? 'free'}
     />
   )
 }

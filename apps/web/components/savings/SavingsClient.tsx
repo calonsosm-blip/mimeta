@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { Pencil, Trash2, CheckCircle2, Zap, SlidersHorizontal, RotateCcw, HelpCircle } from 'lucide-react'
 import { useCurrency } from '@/hooks/useCurrency'
+import { getLimits } from '@/lib/planLimits'
+import { UpgradePrompt } from '@/components/ui/UpgradePrompt'
 
 /* ─── Tipos ─────────────────────────────────────────────── */
 interface Snapshot {
@@ -17,6 +19,7 @@ interface Props {
   snapshots: Snapshot[]; goals: Goal[]; userId: string
   accumulatedBalance: number; monthlyBalance: number; currentMonthLabel: string
   baseCurrency: 'PEN' | 'USD'
+  plan: 'free' | 'premium'
 }
 
 /* ─── Constantes ─────────────────────────────────────────── */
@@ -30,7 +33,7 @@ const EMPTY_GOAL  = { name:'', target_amount:'', current_amount:'0', target_date
 /* ─── Componente ─────────────────────────────────────────── */
 export function SavingsClient({
   snapshots: initial, goals: initialGoals, userId,
-  accumulatedBalance, monthlyBalance, currentMonthLabel, baseCurrency,
+  accumulatedBalance, monthlyBalance, currentMonthLabel, baseCurrency, plan,
 }: Props) {
   const supabase = createClient()
   const { sym, fromPen, fmt } = useCurrency(baseCurrency)
@@ -66,6 +69,9 @@ export function SavingsClient({
   const [editingGoal, setEditingGoal]   = useState<Goal | null>(null)
   const [goalForm, setGoalForm]         = useState<any>(EMPTY_GOAL)
   const [goalLoading, setGoalLoading]   = useState(false)
+  const [showUpgrade, setShowUpgrade]   = useState(false)
+
+  const limits = getLimits(plan)
   const [updatingId, setUpdatingId]     = useState<string | null>(null)
   const [updateAmount, setUpdateAmount] = useState('')
   const [updateError, setUpdateError]   = useState('')
@@ -153,7 +159,10 @@ export function SavingsClient({
   const pctExceeds100         = totalPctAssigned > 100
 
   /* ══ Handlers goals ══════════════════════════════════════ */
-  function openNewGoal() { setEditingGoal(null); setGoalForm(EMPTY_GOAL); setShowGoalForm(true) }
+  function openNewGoal() {
+    if (goals.length >= limits.savings_goals) { setShowUpgrade(true); return }
+    setEditingGoal(null); setGoalForm(EMPTY_GOAL); setShowGoalForm(true)
+  }
   function openEditGoal(g: Goal) {
     setEditingGoal(g)
     setGoalForm({ name: g.name, target_amount: g.target_amount.toString(), current_amount: g.current_amount.toString(), target_date: g.target_date ?? '', emoji: g.emoji, notes: g.notes ?? '' })
@@ -276,6 +285,13 @@ export function SavingsClient({
 
   return (
     <div className="space-y-5">
+      <UpgradePrompt
+        open={showUpgrade}
+        onClose={() => setShowUpgrade(false)}
+        feature="metas de ahorro"
+        limit={limits.savings_goals}
+        unit="metas"
+      />
 
       {/* ── Header ── */}
       <div className="flex items-center justify-between gap-4">

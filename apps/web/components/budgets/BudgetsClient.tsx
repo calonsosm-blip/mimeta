@@ -33,6 +33,8 @@ interface Props {
   selectedYear: number
   selectedMonth: number
   baseCurrency: 'PEN' | 'USD'
+  plan: 'free' | 'premium'
+  totalCategories: number
 }
 
 const MONTHS_LONG = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre']
@@ -41,7 +43,7 @@ const MONTHS_LONG = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','A
 export function BudgetsClient({
   budgets: initialBudgets, allCategories, actualByCategory,
   incomeCategories, actualIncomeByCategory,
-  templates: initialTemplates, userId, selectedYear, selectedMonth, baseCurrency,
+  templates: initialTemplates, userId, selectedYear, selectedMonth, baseCurrency, plan, totalCategories,
 }: Props) {
   const supabase = createClient()
   const router = useRouter()
@@ -733,24 +735,22 @@ export function BudgetsClient({
         {/* Header del card: título + botón editar/listo */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-border">
           <span className="text-sm font-semibold text-foreground">Egresos planificados</span>
-          {budgets.length > 0 && (
-            isEditing ? (
-              <button
-                onClick={() => setIsEditing(false)}
-                className="flex items-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
-              >
-                <Check className="h-3.5 w-3.5" />
-                Listo
-              </button>
-            ) : (
-              <button
-                onClick={() => setIsEditing(true)}
-                className="flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-xs text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
-              >
-                <Pencil className="h-3.5 w-3.5" />
-                Editar
-              </button>
-            )
+          {isEditing ? (
+            <button
+              onClick={() => setIsEditing(false)}
+              className="flex items-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
+            >
+              <Check className="h-3.5 w-3.5" />
+              Listo
+            </button>
+          ) : (
+            <button
+              onClick={() => setIsEditing(true)}
+              className="flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-xs text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+            >
+              <Pencil className="h-3.5 w-3.5" />
+              Editar
+            </button>
           )}
         </div>
 
@@ -972,6 +972,8 @@ export function BudgetsClient({
           categories={allCats}
           userId={userId}
           type="expense"
+          plan={plan}
+          totalCategories={totalCategories}
           onChange={updated => {
             setAllCats(updated)
             setBudgets(prev =>
@@ -990,6 +992,8 @@ export function BudgetsClient({
           categories={allIncomeCats}
           userId={userId}
           type="income"
+          plan={plan}
+          totalCategories={totalCategories}
           onChange={updated => {
             setAllIncomeCats(updated)
             setIncomeBudgets(prev =>

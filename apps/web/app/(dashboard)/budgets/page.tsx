@@ -47,7 +47,7 @@ export default async function BudgetsPage({ searchParams }: Props) {
       .select('id, name, items, created_at')
       .eq('user_id', user!.id)
       .order('created_at', { ascending: false }),
-    supabase.from('profiles').select('base_currency').eq('id', user!.id).single(),
+    supabase.from('profiles').select('base_currency, plan').eq('id', user!.id).single(),
     // Categorías de ingreso del usuario
     supabase
       .from('categories')
@@ -98,6 +98,8 @@ export default async function BudgetsPage({ searchParams }: Props) {
       selectedYear={year}
       selectedMonth={month}
       baseCurrency={(profileRes.data?.base_currency as 'PEN' | 'USD') ?? 'PEN'}
+      plan={(profileRes.data?.plan as 'free' | 'premium') ?? 'free'}
+      totalCategories={(allCatRes.data?.length ?? 0) + (incomeCatRes.data?.length ?? 0)}
     />
   )
 }

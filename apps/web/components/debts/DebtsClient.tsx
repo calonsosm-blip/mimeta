@@ -3,6 +3,8 @@
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useCurrency } from '@/hooks/useCurrency'
+import { getLimits } from '@/lib/planLimits'
+import { UpgradePrompt } from '@/components/ui/UpgradePrompt'
 
 interface Debt {
   id: string
@@ -19,6 +21,7 @@ interface Props {
   debts: Debt[]
   userId: string
   baseCurrency: 'PEN' | 'USD'
+  plan: 'free' | 'premium'
 }
 
 const EMPTY_FORM = {
@@ -26,7 +29,7 @@ const EMPTY_FORM = {
   monthly_payment: '', payment_day: '15', interest_rate: '',
 }
 
-export function DebtsClient({ debts: initial, userId, baseCurrency }: Props) {
+export function DebtsClient({ debts: initial, userId, baseCurrency, plan }: Props) {
   const supabase = createClient()
   const { sym, fromPen, fmt } = useCurrency(baseCurrency)
   const [debts, setDebts]     = useState(initial)
@@ -37,8 +40,12 @@ export function DebtsClient({ debts: initial, userId, baseCurrency }: Props) {
   const [error, setError]       = useState<string | null>(null)
   const [payingId, setPayingId] = useState<string | null>(null)
   const [payAmount, setPayAmount] = useState('')
+  const [showUpgrade, setShowUpgrade] = useState(false)
+
+  const limits = getLimits(plan)
 
   function openNew() {
+    if (debts.length >= limits.debts) { setShowUpgrade(true); return }
     setEditing(null); setForm(EMPTY_FORM); setShowForm(true); setError(null)
   }
 
@@ -114,6 +121,13 @@ export function DebtsClient({ debts: initial, userId, baseCurrency }: Props) {
 
   return (
     <div className="space-y-6 max-w-3xl">
+      <UpgradePrompt
+        open={showUpgrade}
+        onClose={() => setShowUpgrade(false)}
+        feature="deudas"
+        limit={limits.debts}
+        unit="deudas"
+      />
       <div className="flex items-center justify-between">
         <h1 className="text-xl sm:text-2xl font-bold text-foreground">Deudas</h1>
         <button

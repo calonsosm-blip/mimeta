@@ -6,6 +6,8 @@ import { Eye, EyeOff, ChevronLeft, ChevronRight } from 'lucide-react'
 import { MonthThermometer } from './MonthThermometer'
 import { ExpenseDonutChart } from './ExpenseDonutChart'
 import { useIsMobile } from '@/hooks/useIsMobile'
+import { getLimits } from '@/lib/planLimits'
+import { UpgradePrompt } from '@/components/ui/UpgradePrompt'
 
 interface Props {
   profile: { display_name: string | null; plan: string } | null
@@ -60,6 +62,7 @@ export function DashboardClient({
     baseCurrency === 'USD' && liveRate ? pen / liveRate : pen
   const sym = baseCurrency === 'USD' && liveRate ? '$' : 'S/'
   const [invisible, setInvisible] = useState(false)
+  const [showUpgrade, setShowUpgrade] = useState(false)
   const router = useRouter()
   const isMobile = useIsMobile()
   const firstName = profile?.display_name?.split(' ')[0] ?? 'Usuario'
@@ -67,9 +70,29 @@ export function DashboardClient({
 
   const now = new Date()
   const currentYear = now.getFullYear()
+  const currentMonth = now.getMonth() + 1
   const years = Array.from({ length: 5 }, (_, i) => currentYear - 3 + i)
 
+  const limits = getLimits(profile?.plan ?? 'free')
+
+  // Calcula el mes más antiguo al que puede navegar según su plan
+  const oldestAllowed = new Date(currentYear, currentMonth - 1 - limits.history_months, 1)
+
+  function isBeforeLimit(year: number, month: number) {
+    return new Date(year, month - 1, 1) < oldestAllowed
+  }
+
+  // Verificar al cargar si el período actual (vía URL) excede el límite del plan
+  useEffect(() => {
+    if (isBeforeLimit(selectedYear, selectedMonth)) {
+      setShowUpgrade(true)
+      router.replace('/')
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedYear, selectedMonth])
+
   function changePeriod(year: number, month: number) {
+    if (isBeforeLimit(year, month)) { setShowUpgrade(true); return }
     router.push(`/?year=${year}&month=${month}`)
   }
 
@@ -88,6 +111,13 @@ export function DashboardClient({
 
   return (
     <div className="space-y-6">
+      <UpgradePrompt
+        open={showUpgrade}
+        onClose={() => setShowUpgrade(false)}
+        feature="historial completo"
+        limit={limits.history_months}
+        unit="meses de historial"
+      />
       {/* Header */}
       <div className="flex items-start justify-between gap-4">
         {/* Izquierda: título + subtítulo + ojo */}

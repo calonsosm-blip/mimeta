@@ -7,6 +7,8 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { setAccentTheme, getAccentTheme } from '@/components/providers/ThemeProvider'
 import { Sun, Moon, LogOut, Crown } from 'lucide-react'
+import { isPremiumAccent } from '@/lib/planLimits'
+import { UpgradePrompt } from '@/components/ui/UpgradePrompt'
 
 interface Props {
   profile: { display_name: string | null; base_currency: string; plan: string } | null
@@ -37,6 +39,9 @@ export function SettingsClient({ profile, userId }: Props) {
   const [profileMsg, setProfileMsg] = useState('')
   const [mounted, setMounted] = useState(false)
   const [accent, setAccentState] = useState('mimeta')
+  const [showUpgrade, setShowUpgrade] = useState(false)
+
+  const isPremium = profile?.plan === 'premium'
 
   useEffect(() => {
     setMounted(true)
@@ -44,6 +49,7 @@ export function SettingsClient({ profile, userId }: Props) {
   }, [])
 
   function changeAccent(a: string) {
+    if (isPremiumAccent(a) && !isPremium) { setShowUpgrade(true); return }
     setAccentState(a)
     setAccentTheme(a)
   }
@@ -68,6 +74,13 @@ export function SettingsClient({ profile, userId }: Props) {
 
   return (
     <div className="space-y-8 max-w-2xl">
+      <UpgradePrompt
+        open={showUpgrade}
+        onClose={() => setShowUpgrade(false)}
+        feature="temas"
+        limit={1}
+        unit="tema (MiMeta)"
+      />
       <h1 className="text-2xl font-bold text-foreground">Configuración</h1>
 
       {/* Perfil */}

@@ -129,7 +129,7 @@ export default function LoginPage() {
       <div className="min-h-screen flex items-center justify-center bg-muted px-4">
         <div className="w-full max-w-sm text-center space-y-5">
           <div className="rounded-full overflow-hidden w-14 h-14 mx-auto">
-            <Image src="/mimeta-isotipo.png" alt="MiMeta" width={56} height={56} className="object-contain" />
+            <Image src="/isotipo.svg" alt="MiMeta" width={56} height={56} className="object-contain" />
           </div>
           <div className="rounded-2xl border border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950/30 p-6">
             <p className="font-semibold text-emerald-800 dark:text-emerald-300">¡Revisa tu correo!</p>
@@ -165,7 +165,7 @@ export default function LoginPage() {
       <div className="hidden lg:flex lg:w-[45%] flex-col justify-between bg-foreground p-12">
         <div className="flex items-center gap-3">
           <div className="rounded-full overflow-hidden w-9 h-9 shrink-0">
-            <Image src="/mimeta-isotipo.png" alt="MiMeta" width={36} height={36} className="object-contain" />
+            <Image src="/isotipo.svg" alt="MiMeta" width={36} height={36} className="object-contain invert" />
           </div>
           <div>
             <p className="text-sm font-bold text-background leading-tight">MiMeta</p>
@@ -203,7 +203,7 @@ export default function LoginPage() {
           {/* Logo mobile */}
           <div className="flex lg:hidden items-center gap-3 justify-center">
             <div className="rounded-full overflow-hidden w-9 h-9 shrink-0">
-              <Image src="/mimeta-isotipo.png" alt="MiMeta" width={36} height={36} className="object-contain" />
+              <Image src="/isotipo.svg" alt="MiMeta" width={36} height={36} className="object-contain" />
             </div>
             <div>
               <p className="text-sm font-bold text-foreground leading-tight">MiMeta</p>

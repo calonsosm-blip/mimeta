@@ -1,7 +1,6 @@
 'use client'
 
 import Link from 'next/link'
-import Image from 'next/image'
 import { usePathname, useRouter } from 'next/navigation'
 import { useTheme } from 'next-themes'
 import { useEffect, useRef, useState } from 'react'
@@ -107,10 +106,17 @@ export function Sidebar({ user, profile, isOpen = false, onClose }: SidebarProps
 
       {/* Logo */}
       <div className="flex h-16 items-center justify-between px-4 border-b border-sidebar-border">
-        {accent === 'pride'
-          ? <span className="text-xl font-extrabold tracking-tight rainbow-text">MiMeta</span>
-          : <Image src="/mimeta-horizontal.png" alt="MiMeta" height={52} width={125} className="object-contain object-left shrink-0" />
-        }
+        <div className="flex items-center gap-2.5 min-w-0">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/isotipo.svg"
+            alt=""
+            className="h-[34px] w-[34px] shrink-0 object-contain dark:invert"
+          />
+          <span className={`text-lg font-extrabold tracking-tight truncate ${accent === 'pride' ? 'rainbow-text' : 'text-sidebar-foreground'}`}>
+            MiMeta
+          </span>
+        </div>
         {isPremium && (
           <span className="shrink-0 rounded-full bg-accent px-2 py-0.5 text-xs font-medium text-accent-foreground">
             {profile?.plan_type ?? 'pro'}

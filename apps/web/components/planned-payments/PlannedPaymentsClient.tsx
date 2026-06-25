@@ -3,6 +3,8 @@
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useCurrency } from '@/hooks/useCurrency'
+import { getLimits } from '@/lib/planLimits'
+import { UpgradePrompt } from '@/components/ui/UpgradePrompt'
 
 interface Category { id: string; name: string; type: string }
 interface Payment {
@@ -24,6 +26,7 @@ interface Props {
   categories: Category[]
   userId: string
   baseCurrency: 'PEN' | 'USD'
+  plan: 'free' | 'premium'
 }
 
 const FREQ_LABELS: Record<string, string> = {
@@ -43,7 +46,7 @@ const EMPTY_FORM = {
   day_of_month: '', auto_register: false,
 }
 
-export function PlannedPaymentsClient({ payments: initial, categories, userId, baseCurrency }: Props) {
+export function PlannedPaymentsClient({ payments: initial, categories, userId, baseCurrency, plan }: Props) {
   const supabase = createClient()
   const { sym, toBase, fmt } = useCurrency(baseCurrency)
   const [payments, setPayments]     = useState(initial)
@@ -53,8 +56,12 @@ export function PlannedPaymentsClient({ payments: initial, categories, userId, b
   const [loading, setLoading]       = useState(false)
   const [registering, setRegistering] = useState<string | null>(null)
   const [error, setError]           = useState<string | null>(null)
+  const [showUpgrade, setShowUpgrade] = useState(false)
+
+  const limits = getLimits(plan)
 
   function openNew() {
+    if (payments.length >= limits.planned_payments) { setShowUpgrade(true); return }
     setEditing(null); setForm(EMPTY_FORM); setShowForm(true); setError(null)
   }
 
@@ -130,6 +137,13 @@ export function PlannedPaymentsClient({ payments: initial, categories, userId, b
 
   return (
     <div className="space-y-6 max-w-3xl">
+      <UpgradePrompt
+        open={showUpgrade}
+        onClose={() => setShowUpgrade(false)}
+        feature="alertas de pago"
+        limit={limits.planned_payments}
+        unit="alertas"
+      />
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-foreground">Alertas de pago</h1>
         <button
