@@ -107,17 +107,17 @@ function SortableItem({
       ) : (
         <>
           <span className="flex-1 text-sm text-foreground/80">{cat.name}</span>
-          <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+          <div className="flex gap-3 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
             <button
               onClick={() => onEdit(cat.id, cat.name)}
-              className="text-xs text-muted-foreground hover:text-primary"
+              className="text-base sm:text-xs text-muted-foreground hover:text-primary p-1 sm:p-0"
               title="Renombrar"
             >
               ✎
             </button>
             <button
               onClick={() => onDelete(cat.id)}
-              className="text-xs text-muted-foreground hover:text-red-500"
+              className="text-base sm:text-xs text-muted-foreground hover:text-red-500 p-1 sm:p-0"
               title="Eliminar"
             >
               ✕
