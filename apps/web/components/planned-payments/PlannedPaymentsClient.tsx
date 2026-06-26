@@ -154,7 +154,7 @@ export function PlannedPaymentsClient({ payments: initial, categories, userId, b
   const inputClass = 'w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring'
 
   return (
-    <div className="space-y-6 max-w-3xl">
+    <div className="space-y-6 w-full">
       <UpgradePrompt
         open={showUpgrade}
         onClose={() => setShowUpgrade(false)}
