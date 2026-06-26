@@ -105,7 +105,7 @@ function buildHtml(data: {
 
       <!-- CTA -->
       <div style="margin-top:28px;text-align:center">
-        <a href="${appUrl}/reports/monthly?export=pdf"
+        <a href="${appUrl}/reports/monthly?mode=monthly&year=${prevYear}&month=${prevMonth}&export=pdf"
            style="display:inline-block;background:#0E7C4A;color:#fff;font-weight:700;font-size:14px;padding:12px 28px;border-radius:10px;text-decoration:none">
           Ver reporte completo
         </a>
