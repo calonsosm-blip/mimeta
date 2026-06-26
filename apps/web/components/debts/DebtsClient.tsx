@@ -178,9 +178,9 @@ export function DebtsClient({ debts: initial, userId, baseCurrency, plan }: Prop
       )}
 
       {/* Deudas activas */}
-      <div className="space-y-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {activeDebts.length === 0 && (
-          <div className="rounded-xl border border-border bg-card p-12 text-center shadow-sm">
+          <div className="col-span-full rounded-xl border border-border bg-card p-12 text-center shadow-sm">
             <p className="text-muted-foreground text-sm">No hay deudas activas registradas.</p>
             <button onClick={openNew} className="mt-2 text-primary text-sm hover:underline">Agregar deuda</button>
           </div>
