@@ -180,9 +180,9 @@ export function PlannedPaymentsClient({ payments: initial, categories, userId, b
       </div>
 
       {/* Lista activos */}
-      <div className="space-y-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         {active.length === 0 && (
-          <div className="rounded-xl border border-border bg-card p-12 text-center shadow-sm">
+          <div className="col-span-full rounded-xl border border-border bg-card p-12 text-center shadow-sm">
             <p className="text-muted-foreground text-sm">No hay pagos fijos configurados.</p>
             <button onClick={openNew} className="mt-2 text-primary text-sm hover:underline">Agregar la primera alerta</button>
           </div>
