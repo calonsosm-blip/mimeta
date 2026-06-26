@@ -42,7 +42,7 @@ export default async function MonthlyReportPage({ searchParams }: Props) {
   const historyMonths = isPremium ? Infinity : PLAN_LIMITS.free.history_months
 
   // Free users always get monthly mode
-  const requestedMode = (params.mode ?? 'annual') as 'annual' | 'monthly' | 'range'
+  const requestedMode = (params.mode ?? 'monthly') as 'annual' | 'monthly' | 'range'
   const mode: 'annual' | 'monthly' | 'range' = !isPremium ? 'monthly' : requestedMode
 
   // Clamp month/year for free users
