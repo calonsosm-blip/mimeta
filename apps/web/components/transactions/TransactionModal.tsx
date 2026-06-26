@@ -229,7 +229,7 @@ export function TransactionModal({ transaction, categories, userId, baseCurrency
         {/* Header */}
         <div className="flex items-center justify-between border-b border-border px-6 py-4">
           <h2 className="text-base font-semibold text-foreground">
-            {isNew ? 'Nueva transacción' : 'Editar transacción'}
+            {isNew ? 'Nuevo movimiento' : 'Editar movimiento'}
           </h2>
           <button onClick={onClose} className="text-muted-foreground hover:text-foreground text-xl leading-none">×</button>
         </div>
@@ -443,7 +443,7 @@ export function TransactionModal({ transaction, categories, userId, baseCurrency
       </div>
       <ConfirmDialog
         open={showConfirm}
-        title="Eliminar transacción"
+        title="Eliminar movimiento"
         message="¿Estás seguro? Esta acción no se puede deshacer."
         onConfirm={handleDelete}
         onClose={() => setShowConfirm(false)}

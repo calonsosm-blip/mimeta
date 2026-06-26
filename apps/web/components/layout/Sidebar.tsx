@@ -20,7 +20,7 @@ const NAV_GROUPS = [
     label: 'Mi dinero',
     items: [
       { href: '/',               label: 'Dashboard',       icon: LayoutDashboard },
-      { href: '/transactions',   label: 'Transacciones',   icon: ArrowUpDown },
+      { href: '/movimientos',    label: 'Movimientos',     icon: ArrowUpDown },
       { href: '/reports/monthly',label: 'Reportes',        icon: TrendingUp },
     ],
   },

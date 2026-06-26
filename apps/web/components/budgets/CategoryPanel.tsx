@@ -199,7 +199,7 @@ export function CategoryPanel({ categories: initialCats, userId, type = 'expense
       .eq('category_id', id)
 
     if ((count ?? 0) > 0) {
-      setDeleteError(`No se puede eliminar: hay ${count} transacción${count === 1 ? '' : 'es'} registrada${count === 1 ? '' : 's'} con esta categoría.`)
+      setDeleteError(`No se puede eliminar: hay ${count} movimiento${count === 1 ? '' : 's'} registrado${count === 1 ? '' : 's'} con esta categoría.`)
       return
     }
 

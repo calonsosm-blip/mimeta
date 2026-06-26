@@ -26,7 +26,7 @@ const PLANS: {
     ctaHref: '/login',
     highlight: false,
     features: [
-      { text: 'Registro de transacciones ilimitado' },
+      { text: 'Registro de movimientos ilimitado' },
       { text: '6 meses de historial' },
       { text: 'Hasta 2 registros de alertas de pago' },
       { text: 'Hasta 2 registros de deudas' },

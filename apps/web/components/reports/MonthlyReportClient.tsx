@@ -547,7 +547,7 @@ export function MonthlyReportClient({ transactions, mode, year, month, from, to,
         tx.notes ?? '',
       ]),
     ])
-    XLSX.utils.book_append_sheet(wb, ws2, 'Transacciones')
+    XLSX.utils.book_append_sheet(wb, ws2, 'Movimientos')
 
     // Hoja 3: Por categoría
     if (byCategory.length > 0) {
@@ -777,7 +777,7 @@ export function MonthlyReportClient({ transactions, mode, year, month, from, to,
     if (sections.statsMonthly && mode === 'monthly' && transactions.length > 0) {
       secTitle('Estadísticas del mes')
       const rows: string[][] = [
-        ['Transacciones', String(transactions.length), 'Prom. diario gasto', `${sym} ${fmt(fromPen(avgDailyExpense))}`],
+        ['Movimientos', String(transactions.length), 'Prom. diario gasto', `${sym} ${fmt(fromPen(avgDailyExpense))}`],
       ]
       if (isCurrentMonth && daysRemaining > 0)
         rows.push(['Días restantes', String(daysRemaining), 'Proyección fin de mes', `${sym} ${fmt(fromPen(projectedBalance))}`])
@@ -788,7 +788,7 @@ export function MonthlyReportClient({ transactions, mode, year, month, from, to,
     if (sections.rangeStats && mode === 'range') {
       secTitle('Estadísticas del período')
       addTable(
-        [['Duración','Prom. diario gasto','Transacciones']],
+        [['Duración','Prom. diario gasto','Movimientos']],
         [[`${rangeDays} días`, `${sym} ${fmt(fromPen(rangeDays > 0 ? totalExpenses / rangeDays : 0))}`, String(transactions.length)]],
       )
     }
@@ -843,7 +843,7 @@ export function MonthlyReportClient({ transactions, mode, year, month, from, to,
     if (sections.weekdayDistribution && mode === 'range' && weekdayData.some(d => d.total > 0)) {
       secTitle('Gastos por día de semana')
       addTable(
-        [['Día','Total gasto','Transacciones']],
+        [['Día','Total gasto','Movimientos']],
         weekdayData.filter(d => d.total > 0).map(d => [d.label, `${sym} ${fmt(fromPen(d.total))}`, String(d.txCount)]),
         { 1: { halign: 'right' as const }, 2: { halign: 'right' as const } },
       )
@@ -880,7 +880,7 @@ export function MonthlyReportClient({ transactions, mode, year, month, from, to,
     }
 
     // ── Detalle de transacciones ─────────────────────────────────
-    secTitle('Detalle de transacciones')
+    secTitle('Detalle de movimientos')
     addTable(
       [['Fecha','Tipo','Concepto','Categoría','Monto']],
       sortedTx.map(tx => [
@@ -1276,7 +1276,7 @@ export function MonthlyReportClient({ transactions, mode, year, month, from, to,
       {sections.statsMonthly && mode === 'monthly' && transactions.length > 0 && (
         <div className="grid grid-cols-2 gap-2 sm:gap-4 sm:grid-cols-3">
           <div className="rounded-xl border border-border bg-card p-3 sm:p-5 shadow-sm">
-            <p className="text-xs text-muted-foreground">Transacciones</p>
+            <p className="text-xs text-muted-foreground">Movimientos</p>
             <p className="mt-1 text-lg font-bold text-foreground">{transactions.length}</p>
             <p className="mt-0.5 text-xs text-muted-foreground">en el mes</p>
           </div>
@@ -1313,7 +1313,7 @@ export function MonthlyReportClient({ transactions, mode, year, month, from, to,
             <p className="mt-0.5 text-xs text-muted-foreground">en gastos</p>
           </div>
           <div className="rounded-xl border border-border bg-card p-3 sm:p-5 shadow-sm">
-            <p className="text-xs text-muted-foreground">Transacciones</p>
+            <p className="text-xs text-muted-foreground">Movimientos</p>
             <p className="mt-1 text-lg font-bold text-foreground">{transactions.length}</p>
             <p className="mt-0.5 text-xs text-muted-foreground">en el período</p>
           </div>
@@ -1355,11 +1355,11 @@ export function MonthlyReportClient({ transactions, mode, year, month, from, to,
             </h2>
           </div>
           {transactions.length > 0 && (
-            <span className="text-xs text-muted-foreground">{transactions.length} transacciones</span>
+            <span className="text-xs text-muted-foreground">{transactions.length} movimientos</span>
           )}
         </div>
         {transactions.length === 0 ? (
-          <p className="text-sm text-muted-foreground text-center py-10">Sin transacciones en este período.</p>
+          <p className="text-sm text-muted-foreground text-center py-10">Sin movimientos en este período.</p>
         ) : (
           <div className="h-56 sm:h-72">
             <ResponsiveContainer width="100%" height="100%">
@@ -1665,7 +1665,7 @@ export function MonthlyReportClient({ transactions, mode, year, month, from, to,
 
       {transactions.length === 0 && (
         <div className="rounded-xl border border-border bg-card p-12 text-center shadow-sm">
-          <p className="text-muted-foreground text-sm">No hay transacciones en este período.</p>
+          <p className="text-muted-foreground text-sm">No hay movimientos en este período.</p>
         </div>
       )}
 

@@ -95,7 +95,7 @@ export function MonthlySavingsChart({ data, selectedYear, invisible = false }: P
       </div>
 
       {!hasAnyData ? (
-        <p className="text-sm text-gray-400 text-center py-10">Sin transacciones en {selectedYear}.</p>
+        <p className="text-sm text-gray-400 text-center py-10">Sin movimientos en {selectedYear}.</p>
       ) : (
         <ResponsiveContainer width="100%" height={220}>
           <BarChart data={visibleData} margin={{ top: 4, right: 8, left: 0, bottom: 0 }} barSize={28}>

@@ -333,7 +333,7 @@ export function DashboardClient({
         </div>
       </div>
 
-      {/* Distribución de gastos + Transacciones recientes */}
+      {/* Distribución de gastos + Movimientos recientes */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <ExpenseDonutChart
           data={expenseByCategory.map(d => ({ ...d, total: toBase(d.total) }))}
@@ -341,19 +341,19 @@ export function DashboardClient({
           sym={sym}
         />
 
-        {/* Transacciones recientes */}
+        {/* Movimientos recientes */}
         <div className="rounded-xl border border-border bg-card shadow-sm">
           <div className="flex items-center justify-between px-6 py-4 border-b border-border">
             <h2 className="text-sm font-semibold text-foreground">
-              {isCurrentMonth ? 'Últimas transacciones' : `Transacciones de ${MONTHS_LONG[selectedMonth - 1]}`}
+              {isCurrentMonth ? 'Últimos movimientos' : `Movimientos de ${MONTHS_LONG[selectedMonth - 1]}`}
             </h2>
-            <a href="/transactions" className="text-xs text-primary hover:underline">Ver todas</a>
+            <a href="/movimientos" className="text-xs text-primary hover:underline">Ver todos</a>
           </div>
           {recentTransactions.length === 0 ? (
             <p className="px-6 py-8 text-sm text-muted-foreground text-center">
-              No hay transacciones en este período.{' '}
+              No hay movimientos en este período.{' '}
               {isCurrentMonth && (
-                <a href="/transactions" className="text-primary hover:underline">Registra la primera</a>
+                <a href="/movimientos" className="text-primary hover:underline">Registra el primero</a>
               )}
             </p>
           ) : (

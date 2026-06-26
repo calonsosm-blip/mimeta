@@ -137,12 +137,12 @@ export function TransactionsClient({ transactions, categories, userId, baseCurre
     <div className="space-y-4">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h1 className="text-xl sm:text-2xl font-bold text-foreground">Transacciones</h1>
+        <h1 className="text-xl sm:text-2xl font-bold text-foreground">Movimientos</h1>
         <button
           onClick={openNew}
           className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary/90 transition-colors"
         >
-          + Nueva transacción
+          + Nuevo movimiento
         </button>
       </div>
 
@@ -182,7 +182,7 @@ export function TransactionsClient({ transactions, categories, userId, baseCurre
       <div className="rounded-xl border border-border bg-card shadow-sm overflow-x-auto">
         {filtered.length === 0 ? (
           <div className="py-16 text-center">
-            <p className="text-muted-foreground text-sm">No hay transacciones.</p>
+            <p className="text-muted-foreground text-sm">No hay movimientos.</p>
             <button onClick={openNew} className="mt-3 text-primary text-sm hover:underline">
               Registrar la primera
             </button>
@@ -287,7 +287,7 @@ export function TransactionsClient({ transactions, categories, userId, baseCurre
                 <span className="text-red-500 text-lg">!</span>
               </div>
               <div>
-                <h3 className="font-semibold text-foreground text-sm">¿Eliminar transacción?</h3>
+                <h3 className="font-semibold text-foreground text-sm">¿Eliminar movimiento?</h3>
                 <p className="text-sm text-muted-foreground mt-1">
                   <span className="font-medium text-foreground/80">{confirmDelete.concept}</span>
                   {' · '}
