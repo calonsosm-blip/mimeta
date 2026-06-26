@@ -45,6 +45,7 @@ interface Props {
   budgetTotal: number
   monthlyReportEmail: boolean
   userId: string
+  autoExport?: boolean
 }
 
 const SECTIONS_KEY = 'mimeta-report-sections'
@@ -112,7 +113,7 @@ function reportTitle(mode: Mode, year: number, month: number, from: string, to: 
   return `Año ${year}`
 }
 
-export function MonthlyReportClient({ transactions, mode, year, month, from, to, currentYear, currentMonth, baseCurrency, plan, historyMonths, prevIncome, prevExpenses, budgetTotal, monthlyReportEmail, userId }: Props) {
+export function MonthlyReportClient({ transactions, mode, year, month, from, to, currentYear, currentMonth, baseCurrency, plan, historyMonths, prevIncome, prevExpenses, budgetTotal, monthlyReportEmail, userId, autoExport }: Props) {
   const router = useRouter()
   const { sym, fromPen, fmt } = useCurrency(baseCurrency)
 
@@ -174,6 +175,15 @@ export function MonthlyReportClient({ transactions, mode, year, month, from, to,
     }
     document.addEventListener('mousedown', handler)
     return () => document.removeEventListener('mousedown', handler)
+  }, [])
+
+  const exportPDFRef = useRef(exportPDF)
+  useEffect(() => { exportPDFRef.current = exportPDF })
+
+  useEffect(() => {
+    if (!autoExport) return
+    const timer = setTimeout(() => exportPDFRef.current(), 2500)
+    return () => clearTimeout(timer)
   }, [])
 
   function applyConfig() {

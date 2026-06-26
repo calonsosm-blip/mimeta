@@ -74,17 +74,21 @@ function buildHtml(data: {
       </table>
 
       <!-- Stats row -->
-      <div style="margin-top:20px;display:flex;gap:12px">
-        ${savingsRate !== null ? `
-        <div style="flex:1;background:#fffbeb;border:1px solid #fde68a;border-radius:12px;padding:14px;text-align:center">
-          <div style="font-size:11px;color:#6b7280;margin-bottom:4px">Tasa de ahorro</div>
-          <div style="font-size:20px;font-weight:700;color:${srColor}">${savingsRate.toFixed(1)}%</div>
-        </div>` : ''}
-        <div style="flex:1;background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:14px;text-align:center">
-          <div style="font-size:11px;color:#6b7280;margin-bottom:4px">Transacciones</div>
-          <div style="font-size:20px;font-weight:700;color:#111827">${txCount}</div>
-        </div>
-      </div>
+      <table style="width:100%;margin-top:20px"><tr><td style="text-align:center">
+        <table style="display:inline-table;border-collapse:separate;border-spacing:8px">
+          <tr>
+            ${savingsRate !== null ? `
+            <td style="background:#fffbeb;border:1px solid #fde68a;border-radius:12px;padding:14px;text-align:center;min-width:130px">
+              <div style="font-size:11px;color:#6b7280;margin-bottom:4px">Tasa de ahorro</div>
+              <div style="font-size:20px;font-weight:700;color:${srColor}">${savingsRate.toFixed(1)}%</div>
+            </td>` : ''}
+            <td style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:14px;text-align:center;min-width:130px">
+              <div style="font-size:11px;color:#6b7280;margin-bottom:4px">Transacciones</div>
+              <div style="font-size:20px;font-weight:700;color:#111827">${txCount}</div>
+            </td>
+          </tr>
+        </table>
+      </td></tr></table>
 
       <!-- Top categorías -->
       ${topCategories.length > 0 ? `
@@ -101,7 +105,7 @@ function buildHtml(data: {
 
       <!-- CTA -->
       <div style="margin-top:28px;text-align:center">
-        <a href="${appUrl}/reports/monthly"
+        <a href="${appUrl}/reports/monthly?export=pdf"
            style="display:inline-block;background:#0E7C4A;color:#fff;font-weight:700;font-size:14px;padding:12px 28px;border-radius:10px;text-decoration:none">
           Ver reporte completo
         </a>
@@ -128,7 +132,7 @@ Deno.serve(async (req: Request) => {
       Deno.env.get('SUPABASE_URL')!,
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
     )
-    const resendKey = Deno.env.get('RESEND_API_KEY')
+    const resendKey = Deno.env.get('RESEND_API_KEY') ?? Deno.env.get('resend_api_key')
     if (!resendKey) throw new Error('RESEND_API_KEY no configurada')
 
     const appUrl = Deno.env.get('APP_URL') ?? 'https://mimeta-web.vercel.app'

@@ -9,6 +9,7 @@ interface Props {
     month?: string
     from?: string
     to?: string
+    export?: string
   }>
 }
 
@@ -143,6 +144,7 @@ export default async function MonthlyReportPage({ searchParams }: Props) {
       budgetTotal={budgetTotal}
       monthlyReportEmail={emailPrefRes}
       userId={user!.id}
+      autoExport={params.export === 'pdf'}
     />
   )
 }
