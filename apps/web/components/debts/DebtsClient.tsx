@@ -199,7 +199,7 @@ export function DebtsClient({ debts: initial, userId, baseCurrency, plan }: Prop
                   <h3 className="font-semibold text-foreground">{debt.creditor}</h3>
                   <p className="text-xs text-muted-foreground mt-0.5">Pago el día {debt.payment_day} de cada mes</p>
                 </div>
-                <div className="flex gap-2 items-center">
+                <div className="flex flex-wrap gap-2 items-center justify-end">
                   <button onClick={() => openEdit(debt)} className="text-xs text-muted-foreground hover:text-primary">Editar</button>
                   <button onClick={() => toggleActive(debt)} className="text-xs text-muted-foreground hover:text-emerald-600 dark:hover:text-emerald-400">Marcar pagada</button>
                   <button onClick={() => deleteDebt(debt.id)} className="text-xs text-red-400 hover:text-red-500 px-1" title="Eliminar">✕</button>
@@ -208,9 +208,9 @@ export function DebtsClient({ debts: initial, userId, baseCurrency, plan }: Prop
 
               {/* Progreso */}
               <div className="space-y-1">
-                <div className="flex justify-between text-xs text-muted-foreground">
-                  <span>Pagado {pct}%</span>
-                  <span>{sym} {fmt(fromPen(debt.initial_balance - debt.current_balance))} de {sym} {fmt(fromPen(debt.initial_balance))}</span>
+                <div className="flex justify-between text-xs text-muted-foreground gap-2">
+                  <span className="shrink-0">Pagado {pct}%</span>
+                  <span className="truncate text-right">{sym} {fmt(fromPen(debt.initial_balance - debt.current_balance))} / {sym} {fmt(fromPen(debt.initial_balance))}</span>
                 </div>
                 <div className="h-2.5 w-full rounded-full bg-muted">
                   <div className="h-full rounded-full bg-emerald-500 transition-all" style={{ width: `${pct}%` }} />

@@ -221,17 +221,19 @@ export function PlannedPaymentsClient({ payments: initial, categories, userId, b
                   </p>
                 </div>
               </div>
-              <div className="flex gap-2 mt-4">
+              <div className="mt-4 flex flex-col gap-2 sm:flex-row">
                 <button
                   onClick={() => registerNow(p)}
                   disabled={registering === p.id}
-                  className="flex-1 rounded-lg border border-primary/40 py-1.5 text-xs font-semibold text-primary hover:bg-primary/5 transition-colors disabled:opacity-50"
+                  className="w-full sm:flex-1 rounded-lg border border-primary/40 py-1.5 text-xs font-semibold text-primary hover:bg-primary/5 transition-colors disabled:opacity-50"
                 >
                   {registering === p.id ? 'Registrando...' : '✓ Registrar ahora'}
                 </button>
-                <button onClick={() => openEdit(p)} className="rounded-lg border border-border px-3 py-1.5 text-xs text-muted-foreground hover:bg-muted transition-colors">Editar</button>
-                <button onClick={() => toggleActive(p)} className="rounded-lg border border-border px-3 py-1.5 text-xs text-muted-foreground hover:bg-muted transition-colors">Desactivar</button>
-                <button onClick={() => deletePayment(p.id)} className="rounded-lg border border-red-200 px-3 py-1.5 text-xs text-red-400 hover:bg-red-50 hover:border-red-300 hover:text-red-500 transition-colors" title="Eliminar">✕</button>
+                <div className="flex gap-2">
+                  <button onClick={() => openEdit(p)} className="flex-1 sm:flex-none rounded-lg border border-border px-3 py-1.5 text-xs text-muted-foreground hover:bg-muted transition-colors">Editar</button>
+                  <button onClick={() => toggleActive(p)} className="flex-1 sm:flex-none rounded-lg border border-border px-3 py-1.5 text-xs text-muted-foreground hover:bg-muted transition-colors">Desactivar</button>
+                  <button onClick={() => deletePayment(p.id)} className="rounded-lg border border-red-200 px-3 py-1.5 text-xs text-red-400 hover:bg-red-50 hover:border-red-300 hover:text-red-500 transition-colors" title="Eliminar">✕</button>
+                </div>
               </div>
             </div>
           )
